@@ -42,5 +42,5 @@ build_dbg
 
 # External libraries
 external/*
-#sai2-simulation
+sai2-simulation
 #resources
