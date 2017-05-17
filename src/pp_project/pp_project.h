@@ -53,13 +53,14 @@ public:
 
 		// Home configuration for Kuka iiwa
 		//q_des_ << 90, -30, 0, 60, 0, -90, -60;
-		q_des_ << 90, -30, 60, 60, 0, -90, -60;
+		q_des_ << 270, -30, 60, 60, 0, -90, -60;
 		q_des_ *= M_PI / 180.0;
 		dq_des_.setZero();
 
 		// Desired end effector position
 		x_des_ <<0.3, -0.4, 0.7;
 		dx_des_.setZero();
+
 	}
 
 	/***** Public functions *****/

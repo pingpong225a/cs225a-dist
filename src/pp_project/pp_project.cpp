@@ -76,6 +76,9 @@ void PP_Project::updateModel() {
 	robot->position(x_, "link6", Eigen::Vector3d::Zero());
 	robot->linearVelocity(dx_, "link6", Eigen::Vector3d::Zero());
 
+	robot->rotation(x_rot_mat_, "link6"); 
+	robot->angularVelocity(x_w_, "link6");
+	
 	// Jacobians
 	Eigen::MatrixXd J0_swapped(6, robot->dof());		
 	robot->J(J0_swapped, "link6", Eigen::Vector3d::Zero());
@@ -127,17 +130,22 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	//Eigen::Vector3d dx_err = dx_ - v * dx_des_;
 	//Eigen::Vector3d ddx = -kv_pos_ * dx_err;
 	
-	robot->rotation(x_rot_mat_, "link6"); 
 	Eigen::Vector3d delta;	
 	Eigen::VectorXd ee_error(6);
 	Eigen::VectorXd ee_v_error(6);
 
-	for(int i = 0 ;  i < 3; i++){
-		delta += Eigen::Vector3d(x_rot_mat_(i,0),x_rot_mat_(i,1),x_rot_mat_(i,2)).cross(Eigen::Vector3d(x_rot_mat_des_(i,0), x_rot_mat_des_(i,1), x_rot_mat_des_(i, 2)));
-	}
-	delta *= -0.5;
+	robot->orientationError(delta, x_rot_mat_, x_rot_mat_des_);
 
-	robot->angularVelocity(x_w_, "link6");
+	/*cout << "x_rot_mat_" << endl;
+	cout << x_rot_mat_ << endl;
+	cout << "x_rot_mat_des_" << endl;
+	cout << x_rot_mat_des_ << endl;
+	cout << "delta begin" << endl;
+	cout << delta << endl;
+	cout << "delta" << endl;
+	cout << "del_pos" << endl;
+	cout << (x_des_ - x_) << endl;
+	cout << "done" << endl;*/
 	ee_error << (x_des_ - x_),delta;
 	ee_v_error << dx_err,x_w_;
 	
@@ -147,8 +155,6 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
 
 	// Control torques
-	Eigen::Vector3d F_x = Lambda_x_ * ddx;
-	Eigen::VectorXd F_posture = robot->_M * ddq;
 	command_torques_ = J0_.transpose() * (L0 * ( kp_pos_ * ee_error - kv_pos_ * ee_v_error)) + Nbar.transpose() * robot->_M * ddq + g_;
 	return RUNNING;
 }
@@ -169,15 +175,7 @@ void PP_Project::initialize() {
 	// Make sure redis-server is running at localhost with default port 6379
 	redis_client_.serverIs(kRedisServerInfo);
 	
-	// set initial condition
-	robot->_q << 125.9/180.0*M_PI,
-				39.2/180.0*M_PI,
-				-49.2/180.0*M_PI,
-				70.0/180.0*M_PI,
-				-62.4/180.0*M_PI,
-				80.2/180.0*M_PI,
-				187.2/180.0*M_PI;
-	
+
 	// Set gains in Redis if not initialized
 	if (!redis_client_.getCommandIs(KP_POSITION_KEY)) {
 		redis_buf_ = to_string(kp_pos_);
@@ -202,6 +200,9 @@ void PP_Project::initialize() {
 	if (!redis_client_.getCommandIs(KV_JOINT_KEY)) {
 		redis_buf_ = to_string(kv_joint_);
 		redis_client_.setCommandIs(KV_JOINT_KEY, redis_buf_);
+	}
+	if (!redis_client_.getCommandIs(EE_ORI_DESIRED_KEY)) {
+		redis_client_.setEigenMatrixDerivedString(EE_ORI_DESIRED_KEY, x_rot_mat_des_);
 	}
 }
 
