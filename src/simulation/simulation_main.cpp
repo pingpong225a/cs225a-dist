@@ -60,6 +60,17 @@ int main(int argc, char** argv) {
 	// load robots
 	auto robot = new Model::ModelInterface(robot_file, Model::rbdl, Model::urdf, false);
 
+	// set initial condition
+	robot->_q << 125.9/180.0*M_PI,
+			39.2/180.0*M_PI,	
+			 -49.2/180.0*M_PI,
+			70.0/180.0*M_PI,
+			 -62.4/180.0*M_PI,
+			80.2/180.0*M_PI,
+			187.2/180.0*M_PI;
+	sim->setJointPositions(robot_name, robot->_q);		
+
+
 	// create a loop timer
 	LoopTimer timer;
 	timer.setLoopFrequency(SIM_FREQ);   // 10 KHz
@@ -69,7 +80,8 @@ int main(int argc, char** argv) {
 
 	Eigen::VectorXd robot_torques = Eigen::VectorXd::Zero(robot->dof());
 	Eigen::VectorXd robot_torques_interact = Eigen::VectorXd::Zero(robot->dof());
-	robot->_q.setZero();
+
+	//robot->_q.setZero();
 	robot->_dq.setZero();
 	redis_client.setEigenMatrixDerivedString(JOINT_ANGLES_KEY, robot->_q);
 	redis_client.setEigenMatrixDerivedString(JOINT_VELOCITIES_KEY, robot->_dq);
