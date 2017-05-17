@@ -107,9 +107,6 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
 	// Compute torques
 	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
 	command_torques_ = robot->_M * ddq + g_;
-	cout << "desired dq " << dq_des_  << endl;
-	cout << "desired q" << q_des_ << endl;
-	cout << "actual q " << robot->_q << endl;
 	return RUNNING;
 }
 
@@ -233,7 +230,6 @@ void PP_Project::runLoop() {
 
 			// Initialize robot to default joint configuration
 			case JOINT_SPACE_INITIALIZATION:
-				cout << "Joint_space_intialization" << endl;
 				if (computeJointSpaceControlTorques() == FINISHED) {
 					cout << "Joint position initialized. Switching to operational space controller." << endl;
 					controller_state_ = PP_Project::OP_SPACE_POSITION_CONTROL;
