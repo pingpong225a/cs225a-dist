@@ -4,17 +4,17 @@
 
 	<robot name="kuka_iiwa">
 		<!-- model node is required -->
-		<model dir="../src/demo_project/" path="kuka_iiwa_pp.urdf" name="kuka_iiwa" />
+		<model dir="../src/pp_project/" path="kuka_iiwa_pp.urdf" name="kuka_iiwa" />
 		<!-- origin node is optional -->
 		<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 	</robot>
 
 	<static_object name="Box">
-		<origin xyz="2.1 -0.5 0.65" rpy="0 1.5707 0" />
+		<origin xyz="1.3 -0.5 0.65" rpy="0 1.5707 0" />
 		<collision>
 	        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 	        <geometry>
-	            <box size="1.4 3.7 0.05" />
+	            <box size="1.4 3.7 0.03" />
 	        </geometry>
 	    </collision>
 	    <visual>
@@ -28,16 +28,15 @@
 	    </visual>
 	</static_object>
 
-	<static_object name="cs225a::robot::kuka_iiwa::tasks::ee_pos_des">
-		<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+	<!--<static_object name="cs225a::robot::kuka_iiwa::tasks::ee_pos_des"> -->
+	<static_object name="Ball">
+		<origin xyz="0.3 -0.35 0.9" rpy="0 0 0" />
 		<collision> 
-		     <origin xyz="0.0 0.0 0.0" rpy="0 0 0" /> 
 		     <geometry> 
 		         <sphere radius="0.03" /> 
 		     </geometry> 
 		</collision> 
 		<visual>
-			<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 			<geometry>
 				<sphere radius="0.03" />
 			</geometry>

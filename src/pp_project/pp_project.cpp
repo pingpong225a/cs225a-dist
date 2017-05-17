@@ -77,8 +77,6 @@ void PP_Project::updateModel() {
 	robot->linearVelocity(dx_, "link6", Eigen::Vector3d::Zero());
 
 	// Jacobians
-	//robot->Jv(Jv_, "link6", Eigen::Vector3d::Zero());
-	//robot->nullspaceMatrix(N_, Jv_);
 	Eigen::MatrixXd J0_swapped(6, robot->dof());		
 	robot->J(J0_swapped, "link6", Eigen::Vector3d::Zero());
 	J0_.setZero();
@@ -86,7 +84,6 @@ void PP_Project::updateModel() {
 	J0_.bottomRows(3) = J0_swapped.topRows(3);
 		
 	// Dynamics
-	//robot->taskInertiaMatrixWithPseudoInv(Lambda_x_, Jv_);
 	robot->gravityVector(g_);
 	L0 = (J0_ * robot->_M_inv * J0_.transpose()).inverse();
 	Jbar = robot->_M_inv * J0_.transpose() * L0;
@@ -110,6 +107,9 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
 	// Compute torques
 	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
 	command_torques_ = robot->_M * ddq + g_;
+	cout << "desired dq " << dq_des_  << endl;
+	cout << "desired q" << q_des_ << endl;
+	cout << "actual q " << robot->_q << endl;
 	return RUNNING;
 }
 
@@ -153,7 +153,6 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	Eigen::Vector3d F_x = Lambda_x_ * ddx;
 	Eigen::VectorXd F_posture = robot->_M * ddq;
 	command_torques_ = J0_.transpose() * (L0 * ( kp_pos_ * ee_error - kv_pos_ * ee_v_error)) + Nbar.transpose() * robot->_M * ddq + g_;
-	cout << command_torques_;
 	return RUNNING;
 }
 
@@ -172,7 +171,16 @@ void PP_Project::initialize() {
 	// Start redis client
 	// Make sure redis-server is running at localhost with default port 6379
 	redis_client_.serverIs(kRedisServerInfo);
-
+	
+	// set initial condition
+	robot->_q << 125.9/180.0*M_PI,
+				39.2/180.0*M_PI,
+				-49.2/180.0*M_PI,
+				70.0/180.0*M_PI,
+				-62.4/180.0*M_PI,
+				80.2/180.0*M_PI,
+				187.2/180.0*M_PI;
+	
 	// Set gains in Redis if not initialized
 	if (!redis_client_.getCommandIs(KP_POSITION_KEY)) {
 		redis_buf_ = to_string(kp_pos_);
@@ -215,7 +223,6 @@ void PP_Project::runLoop() {
 		readRedisValues();
 		updateModel();
 		 
-		cout << controller_state_ << endl;
 		switch (controller_state_) {
 			// Wait until valid sensor values have been published to Redis
 			case REDIS_SYNCHRONIZATION:
@@ -226,11 +233,11 @@ void PP_Project::runLoop() {
 
 			// Initialize robot to default joint configuration
 			case JOINT_SPACE_INITIALIZATION:
+				cout << "Joint_space_intialization" << endl;
 				if (computeJointSpaceControlTorques() == FINISHED) {
 					cout << "Joint position initialized. Switching to operational space controller." << endl;
 					controller_state_ = PP_Project::OP_SPACE_POSITION_CONTROL;
 				};
-				cout << "not yet ";
 				break;
 
 			// Control end effector to desired position
