@@ -134,9 +134,9 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	Eigen::VectorXd ee_error(6);
 	Eigen::VectorXd ee_v_error(6);
 
-	robot->orientationError(delta, x_rot_mat_, x_rot_mat_des_);
+	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);
 
-	/*cout << "x_rot_mat_" << endl;
+	cout << "x_rot_mat_" << endl;
 	cout << x_rot_mat_ << endl;
 	cout << "x_rot_mat_des_" << endl;
 	cout << x_rot_mat_des_ << endl;
@@ -145,9 +145,9 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	cout << "delta" << endl;
 	cout << "del_pos" << endl;
 	cout << (x_des_ - x_) << endl;
-	cout << "done" << endl;*/
-	ee_error << (x_des_ - x_),delta;
-	ee_v_error << dx_err,x_w_;
+	cout << "done" << endl;
+	ee_error << kp_pos_ * (x_des_ - x_),kp_ori_ * -1 * delta;
+	ee_v_error << kv_pos_ * dx_err, kv_ori_ * x_w_;
 	
 	// Nullspace posture control and damping
 	Eigen::VectorXd q_err = robot->_q - q_des_;
@@ -155,7 +155,7 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
 
 	// Control torques
-	command_torques_ = J0_.transpose() * (L0 * ( kp_pos_ * ee_error - kv_pos_ * ee_v_error)) + Nbar.transpose() * robot->_M * ddq + g_;
+	command_torques_ = J0_.transpose() * (L0 * (ee_error - ee_v_error)) + Nbar.transpose() * robot->_M * ddq + g_;
 	return RUNNING;
 }
 
