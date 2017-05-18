@@ -169,12 +169,12 @@ protected:
 	Eigen::MatrixXd In;
 
 	// Default gains (used only when keys are nonexistent in Redis)
-	double kp_pos_ = 40;
-	double kv_pos_ = 10;
-	double kp_ori_ = 40;
-	double kv_ori_ = 10;
-	double kp_joint_ = 300;
-	double kv_joint_ = 30;
+	double kp_pos_ = 150;
+	double kv_pos_ = 40;
+	double kp_ori_ = 150;
+	double kv_ori_ = 40;
+	double kp_joint_ = 40;
+	double kv_joint_ = 10;
 };
 
 #endif //DEMO_PROJECT_H
