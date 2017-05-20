@@ -30,9 +30,10 @@ static const string CAMERA_NAME = "camera_fixed";
 static const string REDIS_KEY_PREFIX = "cs225a::robot::";
 // - write:
 static string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
+//static string JOINT_TORQUES_COMMANDED_KEY = "sai2::KUKA_IIWA::actuators::fgc";
 // - read:
-static string JOINT_ANGLES_KEY        = "::sensors::q";
-static string JOINT_VELOCITIES_KEY    = "::sensors::dq";
+static string JOINT_ANGLES_KEY        = "sai2::KUKA_IIWA::sensors::q";
+static string JOINT_VELOCITIES_KEY    = "sai2::KUKA_IIWA::sensors::dq";
 
 // function to parse command line arguments
 static void parseCommandline(int argc, char** argv);
@@ -145,7 +146,7 @@ int main(int argc, char** argv) {
 	graphics->getCameraPose(CAMERA_NAME, camera_pos, camera_vertical, camera_lookat);
 
 	// load robots
-	auto robot = make_shared<Model::ModelInterface>(robot_file, Model::rbdl, Model::urdf, false);
+	auto robot = make_shared<Model::ModelInterface>(robot_file, Model::rbdl_kuka, Model::urdf, false);
 
 	// create a UI widget to apply mouse forces to the robot
 	UIForceWidget force_widget(robot_name, robot.get(), graphics);
@@ -217,8 +218,8 @@ int main(int argc, char** argv) {
     while (!glfwWindowShouldClose(window))
 	{
 		// read from Redis
-		redis_client.getEigenMatrixDerivedString(JOINT_ANGLES_KEY, robot->_q);
-		redis_client.getEigenMatrixDerivedString(JOINT_VELOCITIES_KEY, robot->_dq);
+		redis_client.getEigenMatrixDerived(JOINT_ANGLES_KEY, robot->_q);
+		redis_client.getEigenMatrixDerived(JOINT_VELOCITIES_KEY, robot->_dq);
 
 #ifdef ENABLE_TRAJECTORIES
 		/********** Begin Custom Visualizer Code **********/
@@ -374,8 +375,8 @@ void parseCommandline(int argc, char** argv) {
 
 	// Set up Redis keys
 	JOINT_INTERACTION_TORQUES_COMMANDED_KEY = REDIS_KEY_PREFIX + robot_name + JOINT_INTERACTION_TORQUES_COMMANDED_KEY;
-	JOINT_ANGLES_KEY        = REDIS_KEY_PREFIX + robot_name + JOINT_ANGLES_KEY;
-	JOINT_VELOCITIES_KEY    = REDIS_KEY_PREFIX + robot_name + JOINT_VELOCITIES_KEY;
+	// JOINT_ANGLES_KEY        = REDIS_KEY_PREFIX + robot_name + JOINT_ANGLES_KEY;
+	// JOINT_VELOCITIES_KEY    = REDIS_KEY_PREFIX + robot_name + JOINT_VELOCITIES_KEY;
 
 #ifdef ENABLE_TRAJECTORIES
 	/********** Begin Custom Visualizer Code **********/

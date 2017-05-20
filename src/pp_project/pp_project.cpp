@@ -282,7 +282,7 @@ int main(int argc, char** argv) {
 
 	// Load robot
 	cout << "Loading robot: " << robot_file << endl;
-	auto robot = make_shared<Model::ModelInterface>(robot_file, Model::rbdl, Model::urdf, false);	
+	auto robot = make_shared<Model::ModelInterface>(robot_file, Model::rbdl_kuka, Model::urdf, false);	
 	robot->updateModel();
 
 	// Start controller app

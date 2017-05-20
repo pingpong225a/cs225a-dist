@@ -22,11 +22,11 @@ static string robot_name = "";
 // NOTE: keys are formatted to be: REDIS_KEY_PREFIX::<robot-name>::<KEY>
 static const std::string REDIS_KEY_PREFIX = "cs225a::robot::";
 // - read:
-static std::string JOINT_TORQUES_COMMANDED_KEY             = "::actuators::fgc";
+static std::string JOINT_TORQUES_COMMANDED_KEY             = "sai2::KUKA_IIWA::actuators::fgc";
 static std::string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
 // - write:
-static std::string JOINT_ANGLES_KEY     = "::sensors::q";
-static std::string JOINT_VELOCITIES_KEY = "::sensors::dq";
+static std::string JOINT_ANGLES_KEY     = "sai2::KUKA_IIWA::sensors::q";
+static std::string JOINT_VELOCITIES_KEY = "sai2::KUKA_IIWA::sensors::dq";
 static std::string SIM_TIMESTAMP_KEY    = "::timestamp";
 
 static const double SENSOR_WRITE_FREQ = 1000;
@@ -58,16 +58,16 @@ int main(int argc, char** argv) {
 	auto sim = new Simulation::SimulationInterface(world_file, Simulation::sai2simulation, Simulation::urdf, false);
 
 	// load robots
-	auto robot = new Model::ModelInterface(robot_file, Model::rbdl, Model::urdf, false);
+	auto robot = new Model::ModelInterface(robot_file, Model::rbdl_kuka, Model::urdf, false);
 
 	// set initial condition
-	robot->_q << 125.9/180.0*M_PI,
-			39.2/180.0*M_PI,	
-			 -49.2/180.0*M_PI,
-			70.0/180.0*M_PI,
-			 -62.4/180.0*M_PI,
-			80.2/180.0*M_PI,
-			187.2/180.0*M_PI;
+	robot->_q << 90.0/180.0*M_PI,
+			-30/180.0*M_PI,	
+			 0/180.0*M_PI,
+			60/180.0*M_PI,
+			 0/180.0*M_PI,
+			-90/180.0*M_PI,
+			0/180.0*M_PI;
 	sim->setJointPositions(robot_name, robot->_q);		
 
 

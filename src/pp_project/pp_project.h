@@ -22,11 +22,11 @@ public:
 		        const std::string &robot_name) :
 		robot(robot),
 		dof(robot->dof()),
-		JOINT_TORQUES_COMMANDED_KEY(kRedisKeyPrefix + robot_name + "::actuators::fgc"),
+		JOINT_TORQUES_COMMANDED_KEY(kRedisKeyPrefix + robot_name + "sai2::KUKA_IIWA::actuators::fgc"),
 		EE_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::ee_pos"),
 		EE_POSITION_DESIRED_KEY    (kRedisKeyPrefix + robot_name + "::tasks::ee_pos_des"),
-		JOINT_ANGLES_KEY           (kRedisKeyPrefix + robot_name + "::sensors::q"),
-		JOINT_VELOCITIES_KEY       (kRedisKeyPrefix + robot_name + "::sensors::dq"),
+		JOINT_ANGLES_KEY           (kRedisKeyPrefix + robot_name + "sai2::KUKA_IIWA::sensors::q"),
+		JOINT_VELOCITIES_KEY       (kRedisKeyPrefix + robot_name + "sai2::KUKUA_IIWA::sensors::dq"),
 		TIMESTAMP_KEY              (kRedisKeyPrefix + robot_name + "::timestamp"),
 		KP_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::kp_pos"),
 		KV_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::kv_pos"),
@@ -36,6 +36,8 @@ public:
 		KV_JOINT_KEY               (kRedisKeyPrefix + robot_name + "::tasks::kv_joint"),
 		EE_ORI_KEY 				   (kRedisKeyPrefix + robot_name + "::tasks::ee_rot_mat_"),
 		EE_ORI_DESIRED_KEY         (kRedisKeyPrefix + robot_name + "::tasks::ee_rot_mat_des_"),
+		//BALL_POSITION              ("ball_pos"),
+		//BALL_TIME                  ("ball_time"),
 		command_torques_(dof),
 		Jv_(3, dof),
 		N_(dof, dof),
@@ -169,12 +171,12 @@ protected:
 	Eigen::MatrixXd In;
 
 	// Default gains (used only when keys are nonexistent in Redis)
-	double kp_pos_ = 150;
-	double kv_pos_ = 40;
+	double kp_pos_ = 150/5;
+	double kv_pos_ = 40/5;
 	double kp_ori_ = 150;
 	double kv_ori_ = 40;
-	double kp_joint_ = 40;
-	double kv_joint_ = 10;
+	double kp_joint_ = 40/2;
+	double kv_joint_ = 10/2;
 };
 
 #endif //DEMO_PROJECT_H
