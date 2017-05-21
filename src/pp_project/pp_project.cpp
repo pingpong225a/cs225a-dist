@@ -22,8 +22,8 @@ using namespace std;
  */
 void PP_Project::readRedisValues() {
 	// read from Redis current sensor values
-	redis_client_.getEigenMatrixDerivedString(JOINT_ANGLES_KEY, robot->_q);
-	redis_client_.getEigenMatrixDerivedString(JOINT_VELOCITIES_KEY, robot->_dq);
+	redis_client_.getEigenMatrixDerived(JOINT_ANGLES_KEY, robot->_q);
+	redis_client_.getEigenMatrixDerived(JOINT_VELOCITIES_KEY, robot->_dq);
 
 	// Get current simulation timestamp from Redis
 	redis_client_.getCommandIs(TIMESTAMP_KEY, redis_buf_);
@@ -44,8 +44,8 @@ void PP_Project::readRedisValues() {
 	kv_joint_ = stoi(redis_buf_);
 
 	// Read in desired end effector position and orientation
-    redis_client_.getEigenMatrixDerivedString(EE_POSITION_DESIRED_KEY,x_des_);	
-	redis_client_.getEigenMatrixDerivedString(EE_ORI_DESIRED_KEY,x_rot_mat_des_);
+    redis_client_.getEigenMatrixDerived(EE_POSITION_DESIRED_KEY,x_des_);	
+	redis_client_.getEigenMatrixDerived(EE_ORI_DESIRED_KEY,x_rot_mat_des_);
 }
 
 /**
@@ -55,11 +55,11 @@ void PP_Project::readRedisValues() {
  */
 void PP_Project::writeRedisValues() {
 	// Send end effector position and desired position
-	redis_client_.setEigenMatrixDerivedString(EE_POSITION_KEY, x_);
-	redis_client_.setEigenMatrixDerivedString(EE_POSITION_DESIRED_KEY, x_des_);
+	redis_client_.setEigenMatrixDerived(EE_POSITION_KEY, x_);
+	redis_client_.setEigenMatrixDerived(EE_POSITION_DESIRED_KEY, x_des_);
 	
 	// Send torques
-	redis_client_.setEigenMatrixDerivedString(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
+	redis_client_.setEigenMatrixDerived(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
 }
 
 
@@ -202,7 +202,7 @@ void PP_Project::initialize() {
 		redis_client_.setCommandIs(KV_JOINT_KEY, redis_buf_);
 	}
 	if (!redis_client_.getCommandIs(EE_ORI_DESIRED_KEY)) {
-		redis_client_.setEigenMatrixDerivedString(EE_ORI_DESIRED_KEY, x_rot_mat_des_);
+		redis_client_.setEigenMatrixDerived(EE_ORI_DESIRED_KEY, x_rot_mat_des_);
 	}
 }
 
@@ -262,7 +262,7 @@ void PP_Project::runLoop() {
 
 	// Zero out torques before quitting
 	command_torques_.setZero();
-	redis_client_.setEigenMatrixDerivedString(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
+	redis_client_.setEigenMatrixDerived(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
 }
 
 int main(int argc, char** argv) {

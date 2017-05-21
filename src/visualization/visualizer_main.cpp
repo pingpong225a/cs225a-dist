@@ -29,8 +29,8 @@ static const string CAMERA_NAME = "camera_fixed";
 // NOTE: keys are formatted to be: REDIS_KEY_PREFIX::<robot-name>::<KEY>
 static const string REDIS_KEY_PREFIX = "cs225a::robot::";
 // - write:
+static string JOINT_TORQUES_COMMANDED_KEY = "sai2::KUKA_IIWA::actuators::fgc";
 static string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
-//static string JOINT_TORQUES_COMMANDED_KEY = "sai2::KUKA_IIWA::actuators::fgc";
 // - read:
 static string JOINT_ANGLES_KEY        = "sai2::KUKA_IIWA::sensors::q";
 static string JOINT_VELOCITIES_KEY    = "sai2::KUKA_IIWA::sensors::dq";
@@ -196,8 +196,8 @@ int main(int argc, char** argv) {
 	Eigen::Vector3d x, x_des;            // Current end effector pos
 	Eigen::Vector3d x_prev, x_des_prev;  // Previous end effector pos
 	int idx_traj = 0, idx_des_traj = 0;  // Current idx in trajectory buffer
-	redis_client.getEigenMatrixDerivedString(EE_POSITION_KEY, x);
-	redis_client.getEigenMatrixDerivedString(EE_POSITION_DESIRED_KEY, x_des);
+	redis_client.getEigenMatrixDerived(EE_POSITION_KEY, x);
+	redis_client.getEigenMatrixDerived(EE_POSITION_DESIRED_KEY, x_des);
 	x_prev = x;
 	x_des_prev = x_des;
 
@@ -224,8 +224,8 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_TRAJECTORIES
 		/********** Begin Custom Visualizer Code **********/
 
-		redis_client.getEigenMatrixDerivedString(EE_POSITION_KEY, x);
-		redis_client.getEigenMatrixDerivedString(EE_POSITION_DESIRED_KEY, x_des);
+		redis_client.getEigenMatrixDerived(EE_POSITION_KEY, x);
+		redis_client.getEigenMatrixDerived(EE_POSITION_DESIRED_KEY, x_des);
 
 		// Update end effector position trajectory
 		if ((x - x_prev).norm() > kTrajectoryMinUpdateDistance) {
@@ -347,7 +347,7 @@ int main(int argc, char** argv) {
 		// get UI torques
 		force_widget.getUIJointTorques(interaction_torques);
 		//write to redis
-		redis_client.setEigenMatrixDerivedString(JOINT_INTERACTION_TORQUES_COMMANDED_KEY, interaction_torques);
+		redis_client.setEigenMatrixDerived(JOINT_INTERACTION_TORQUES_COMMANDED_KEY, interaction_torques);
 	}
 
     // destroy context

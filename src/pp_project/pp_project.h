@@ -26,7 +26,7 @@ public:
 		EE_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::ee_pos"),
 		EE_POSITION_DESIRED_KEY    (kRedisKeyPrefix + robot_name + "::tasks::ee_pos_des"),
 		JOINT_ANGLES_KEY           (kRedisKeyPrefix + robot_name + "sai2::KUKA_IIWA::sensors::q"),
-		JOINT_VELOCITIES_KEY       (kRedisKeyPrefix + robot_name + "sai2::KUKUA_IIWA::sensors::dq"),
+		JOINT_VELOCITIES_KEY       (kRedisKeyPrefix + robot_name + "sai2::KUKA_IIWA::sensors::dq"),
 		TIMESTAMP_KEY              (kRedisKeyPrefix + robot_name + "::timestamp"),
 		KP_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::kp_pos"),
 		KV_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::kv_pos"),
