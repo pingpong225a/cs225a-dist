@@ -18,6 +18,8 @@
 
 #define ENABLE_TRAJECTORIES
 
+#define ENABLE_BALL
+
 using namespace std;
 
 static string world_file = "";
@@ -34,6 +36,7 @@ static string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_intera
 // - read:
 static string JOINT_ANGLES_KEY        = "sai2::KUKA_IIWA::sensors::q";
 static string JOINT_VELOCITIES_KEY    = "sai2::KUKA_IIWA::sensors::dq";
+static string BALL_POS_KEY    = "ball_pos";
 
 // function to parse command line arguments
 static void parseCommandline(int argc, char** argv);
@@ -131,6 +134,42 @@ static int updateTrajectoryPoint(chai3d::cMultiSegment *trajectory, int idx_traj
 /********** End Custom Visualizer Code **********/
 #endif // ENABLE_TRAJECTORIES
 
+#ifdef ENABLE_BALL
+/********** Begin Custom Visualizer Code **********/
+
+// Chai3d graphics names
+// - Created inside visualizer_main.cpp
+static string BALL_POSITION_CHAI_NAME         = EE_POSITION_KEY + "_traj";
+// - Created inside world.urdf
+//static string EE_POSITION_DESIRED_URDF_NAME   = EE_POSITION_DESIRED_KEY;
+
+/**
+ */
+static chai3d::cShapeSphere *createSphere(const string &graphics_name, const Eigen::Vector3d &starting_point) {
+	// Create graphics object
+	auto sphere = new chai3d::cShapeSphere(0.1);
+	sphere->m_name = graphics_name;
+        return sphere;
+
+        /*
+	// Link together kLenTrajectory segments with vertices at starting_point
+	trajectory->newVertex(starting_point(0), starting_point(1), starting_point(2));
+	for (int i = 0; i < kLenTrajectory; i++) {
+		trajectory->newVertex(starting_point(0), starting_point(1), starting_point(2));
+		trajectory->newSegment(0, 0);
+	}
+
+	// Set trajectory color to white by default
+	trajectory->setLineColor(chai3d::cColorf(1.0, 1.0, 1.0, 1.0));
+	trajectory->setLineWidth(2.0);
+
+	return trajectory;
+        */
+}
+
+/********** End Custom Visualizer Code **********/
+#endif // ENABLE_BALL
+
 int main(int argc, char** argv) {
 	parseCommandline(argc, argv);
 	cout << "Loading URDF world model file: " << world_file << endl;
@@ -214,6 +253,29 @@ int main(int argc, char** argv) {
 	/********** End Custom Visualizer Code **********/
 #endif // ENABLE_TRAJECTORIES
 
+#ifdef ENABLE_BALL
+	/********** Begin Custom Visualizer Code **********/
+
+	// Set up trajectory tracking variables
+	Eigen::Vector3d x_ball;
+        x_ball << 0, 0, 0;
+	if (redis_client.getCommandIs(BALL_POS_KEY)) {
+            redis_client.getEigenMatrixDerived(BALL_POS_KEY, x_ball);
+        } else {
+            redis_client.setEigenMatrixDerived(BALL_POS_KEY, x_ball);
+        }
+
+	// Create trajectory graphics objects and insert them into the chai3d world
+	auto x_ball_sphere = createSphere(BALL_POSITION_CHAI_NAME, x_ball);
+	//x_ball_sphere->setColor(chai3d::cColorf(1.0, 0.0, 0.0, 1.0));  // Red for x_des
+	graphics->_world->addChild(x_ball_sphere);
+
+	// Retrieve cs225a::<robot_name>::tasks::ee_pos_des sphere marker from world.urdf
+	// auto x_ball_marker = findObjectInWorld(graphics->_world, EE_POSITION_DESIRED_URDF_NAME);
+
+	/********** End Custom Visualizer Code **********/
+#endif // ENABLE_BALL
+
     // while window is open:
     while (!glfwWindowShouldClose(window))
 	{
@@ -246,6 +308,33 @@ int main(int argc, char** argv) {
 
 		/********** End Custom Visualizer Code **********/
 #endif // ENABLE_TRAJECTORIES
+
+#ifdef ENABLE_BALL
+		/********** Begin Custom Visualizer Code **********/
+
+		redis_client.getEigenMatrixDerived(BALL_POS_KEY, x_ball);
+
+                /*
+		// Update end effector position trajectory
+		if ((x - x_prev).norm() > kTrajectoryMinUpdateDistance) {
+			idx_traj = updateTrajectoryPoint(x_traj, idx_traj, x);
+			x_prev = x;
+		}
+
+		// Update end effector desired position trajectory
+		if ((x_des - x_des_prev).norm() > kTrajectoryMinUpdateDistance) {
+			idx_des_traj = updateTrajectoryPoint(x_des_traj, idx_des_traj, x_des);
+			x_des_prev = x_des;
+		}
+
+		// Update end effector desired position marker
+		if (x_des_marker != nullptr) {
+			x_des_marker->setLocalPos(chai3d::cVector3d(x_des));
+		}*/
+                x_ball_sphere->setLocalPos(chai3d::cVector3d(x_ball));
+
+		/********** End Custom Visualizer Code **********/
+#endif // ENABLE_BALL
 
 		// update transformations
 		robot->updateModel();
