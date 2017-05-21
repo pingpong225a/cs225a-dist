@@ -146,14 +146,22 @@ void DemoProject::initialize() {
 
 	// Set up optitrack
 	optitrack_ = make_unique<OptiTrackClient>();
-	// optitrack_->openConnection("123.45.67.89");
-	optitrack_->openCsv("../resources/optitrack_120.csv");
+	//optitrack_->openConnection("10.62.119.51"); // this connects! but we receive no data
+	//optitrack_->openConnection("172.24.68.48");
+	//optitrack_->openConnection("239.255.42.99");
+	//optitrack_->openConnection("169.254.199.206");
+
+	optitrack_->openCsv("./resources/data/bounce1.csv");
 
 	// Demo usage for OptiTrackClient
 	// TODO: Remove
 	while (g_runloop) {
+                cout << "tracking..." << endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		if (!optitrack_->getFrame()) continue;
+		if (!optitrack_->getFrame()) {
+                    cout << "nothing in frame" << endl;
+                    continue;
+                }
 
 		cout << "Timestamp: " << optitrack_->frameTime() << endl;
 		cout << "Rigid body positions:" << endl;
