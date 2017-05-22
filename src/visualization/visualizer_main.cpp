@@ -8,6 +8,7 @@
 #include <graphics/GraphicsInterface.h>
 #include <graphics/ChaiGraphics.h>
 #include "redis/RedisClient.h"
+#include "../version/version.h"
 
 #include <GLFW/glfw3.h> //must be loaded after loading opengl/glew
 
@@ -31,11 +32,22 @@ static const string CAMERA_NAME = "camera_fixed";
 // NOTE: keys are formatted to be: REDIS_KEY_PREFIX::<robot-name>::<KEY>
 static const string REDIS_KEY_PREFIX = "cs225a::robot::";
 // - write:
-static string JOINT_TORQUES_COMMANDED_KEY = "sai2::KUKA_IIWA::actuators::fgc";
-static string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
+#ifdef USING_KUKA_REDIS_KEYS
+static std::string JOINT_TORQUES_COMMANDED_KEY             = "sai2::KUKA_IIWA::actuators::fgc";
+static std::string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
+#else
+static std::string JOINT_TORQUES_COMMANDED_KEY             = "::actuators::fgc";
+static std::string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
+#endif
 // - read:
-static string JOINT_ANGLES_KEY        = "sai2::KUKA_IIWA::sensors::q";
-static string JOINT_VELOCITIES_KEY    = "sai2::KUKA_IIWA::sensors::dq";
+#ifdef USING_KUKA_REDIS_KEYS
+static std::string JOINT_ANGLES_KEY     = "sai2::KUKA_IIWA::sensors::q";
+static std::string JOINT_VELOCITIES_KEY = "sai2::KUKA_IIWA::sensors::dq";
+#else
+static std::string JOINT_ANGLES_KEY     = "::sensors::q";
+static std::string JOINT_VELOCITIES_KEY = "::sensors::dq";
+#endif
+
 static string BALL_POS_KEY    = "ball_pos";
 
 // function to parse command line arguments
@@ -462,10 +474,12 @@ void parseCommandline(int argc, char** argv) {
 	// argument 3: <robot-name>
 	robot_name = string(argv[3]);
 
+#ifndef USING_KUKA_REDIS_KEYS
 	// Set up Redis keys
 	JOINT_INTERACTION_TORQUES_COMMANDED_KEY = REDIS_KEY_PREFIX + robot_name + JOINT_INTERACTION_TORQUES_COMMANDED_KEY;
-	// JOINT_ANGLES_KEY        = REDIS_KEY_PREFIX + robot_name + JOINT_ANGLES_KEY;
-	// JOINT_VELOCITIES_KEY    = REDIS_KEY_PREFIX + robot_name + JOINT_VELOCITIES_KEY;
+	JOINT_ANGLES_KEY        = REDIS_KEY_PREFIX + robot_name + JOINT_ANGLES_KEY;
+	JOINT_VELOCITIES_KEY    = REDIS_KEY_PREFIX + robot_name + JOINT_VELOCITIES_KEY;
+#endif
 
 #ifdef ENABLE_TRAJECTORIES
 	/********** Begin Custom Visualizer Code **********/

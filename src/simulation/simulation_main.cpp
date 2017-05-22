@@ -3,6 +3,7 @@
 #include <simulation/SimulationInterface.h>
 #include "redis/RedisClient.h"
 #include "timer/LoopTimer.h"
+#include "../version/version.h"
 
 #include <iostream>
 #include <string>
@@ -22,11 +23,22 @@ static string robot_name = "";
 // NOTE: keys are formatted to be: REDIS_KEY_PREFIX::<robot-name>::<KEY>
 static const std::string REDIS_KEY_PREFIX = "cs225a::robot::";
 // - read:
+#ifdef USING_KUKA_REDIS_KEYS
 static std::string JOINT_TORQUES_COMMANDED_KEY             = "sai2::KUKA_IIWA::actuators::fgc";
 static std::string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
+#else
+static std::string JOINT_TORQUES_COMMANDED_KEY             = "::actuators::fgc";
+static std::string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
+#endif
 // - write:
+#ifdef USING_KUKA_REDIS_KEYS
 static std::string JOINT_ANGLES_KEY     = "sai2::KUKA_IIWA::sensors::q";
 static std::string JOINT_VELOCITIES_KEY = "sai2::KUKA_IIWA::sensors::dq";
+#else
+static std::string JOINT_ANGLES_KEY     = "::sensors::q";
+static std::string JOINT_VELOCITIES_KEY = "::sensors::dq";
+#endif
+
 static std::string SIM_TIMESTAMP_KEY    = "::timestamp";
 
 static const double SENSOR_WRITE_FREQ = 1000;
@@ -58,7 +70,11 @@ int main(int argc, char** argv) {
 	auto sim = new Simulation::SimulationInterface(world_file, Simulation::sai2simulation, Simulation::urdf, false);
 
 	// load robots
+#ifdef USING_KUKA_REDIS_KEYS
 	auto robot = new Model::ModelInterface(robot_file, Model::rbdl_kuka, Model::urdf, false);
+#else
+	auto robot = new Model::ModelInterface(robot_file, Model::rbdl, Model::urdf, false);
+#endif
 
 	// set initial condition
 	robot->_q << 90.0/180.0*M_PI,
@@ -135,9 +151,11 @@ static void parseCommandline(int argc, char** argv) {
 	robot_name = string(argv[3]);
 
 	// Set up Redis keys
-	//JOINT_TORQUES_COMMANDED_KEY = REDIS_KEY_PREFIX + robot_name + JOINT_TORQUES_COMMANDED_KEY;
-	//JOINT_INTERACTION_TORQUES_COMMANDED_KEY = REDIS_KEY_PREFIX + robot_name + JOINT_INTERACTION_TORQUES_COMMANDED_KEY;
-	//JOINT_ANGLES_KEY            = REDIS_KEY_PREFIX + robot_name + JOINT_ANGLES_KEY;
-	//JOINT_VELOCITIES_KEY        = REDIS_KEY_PREFIX + robot_name + JOINT_VELOCITIES_KEY;
+#ifndef USING_KUKA_REDIS_KEYS
+	JOINT_TORQUES_COMMANDED_KEY = REDIS_KEY_PREFIX + robot_name + JOINT_TORQUES_COMMANDED_KEY;
+	JOINT_INTERACTION_TORQUES_COMMANDED_KEY = REDIS_KEY_PREFIX + robot_name + JOINT_INTERACTION_TORQUES_COMMANDED_KEY;
+	JOINT_ANGLES_KEY            = REDIS_KEY_PREFIX + robot_name + JOINT_ANGLES_KEY;
+	JOINT_VELOCITIES_KEY        = REDIS_KEY_PREFIX + robot_name + JOINT_VELOCITIES_KEY;
+#endif
 	SIM_TIMESTAMP_KEY           = REDIS_KEY_PREFIX + robot_name + SIM_TIMESTAMP_KEY;
 }

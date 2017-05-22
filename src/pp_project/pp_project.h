@@ -14,6 +14,8 @@
 #include <string>
 #include <thread>
 
+#include "../version/version.h"
+
 class PP_Project {
 
 public:
@@ -22,14 +24,17 @@ public:
 		        const std::string &robot_name) :
 		robot(robot),
 		dof(robot->dof()),
-		//JOINT_TORQUES_COMMANDED_KEY(kRedisKeyPrefix + robot_name + "::actuators::fgc"),
-		JOINT_TORQUES_COMMANDED_KEY("sai2::KUKA_IIWA::actuators::fgc"),
 		EE_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::ee_pos"),
 		EE_POSITION_DESIRED_KEY    (kRedisKeyPrefix + robot_name + "::tasks::ee_pos_des"),
-		//JOINT_ANGLES_KEY           (kRedisKeyPrefix + robot_name + "::sensors::q"),
+#ifdef USING_KUKA_REDIS_KEYS
 		JOINT_ANGLES_KEY           ("sai2::KUKA_IIWA::sensors::q"),
-		//JOINT_VELOCITIES_KEY       (kRedisKeyPrefix + robot_name + "::sensors::dq"),
 		JOINT_VELOCITIES_KEY       ("sai2::KUKA_IIWA::sensors::dq"),
+		JOINT_TORQUES_COMMANDED_KEY("sai2::KUKA_IIWA::actuators::fgc"),
+#else
+		JOINT_ANGLES_KEY           (kRedisKeyPrefix + robot_name + "::sensors::q"),
+		JOINT_VELOCITIES_KEY       (kRedisKeyPrefix + robot_name + "::sensors::dq"),
+		JOINT_TORQUES_COMMANDED_KEY(kRedisKeyPrefix + robot_name + "::actuators::fgc"),
+#endif // USING_KUKA_REDIS_KEYS
 		TIMESTAMP_KEY              (kRedisKeyPrefix + robot_name + "::timestamp"),
 		KP_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::kp_pos"),
 		KV_POSITION_KEY            (kRedisKeyPrefix + robot_name + "::tasks::kv_pos"),
