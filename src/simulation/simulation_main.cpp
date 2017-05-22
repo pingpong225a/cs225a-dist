@@ -99,10 +99,10 @@ int main(int argc, char** argv) {
 
 	//robot->_q.setZero();
 	robot->_dq.setZero();
-	redis_client.setEigenMatrixDerived(JOINT_ANGLES_KEY, robot->_q);
-	redis_client.setEigenMatrixDerived(JOINT_VELOCITIES_KEY, robot->_dq);
-	redis_client.setEigenMatrixDerived(JOINT_TORQUES_COMMANDED_KEY, robot_torques);
-	redis_client.setEigenMatrixDerived(JOINT_INTERACTION_TORQUES_COMMANDED_KEY, robot_torques_interact);
+	redis_client.REDIS_SET_EIGEN_MATRIX(JOINT_ANGLES_KEY, robot->_q);
+	redis_client.REDIS_SET_EIGEN_MATRIX(JOINT_VELOCITIES_KEY, robot->_dq);
+	redis_client.REDIS_SET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, robot_torques);
+	redis_client.REDIS_SET_EIGEN_MATRIX(JOINT_INTERACTION_TORQUES_COMMANDED_KEY, robot_torques_interact);
 
 	double time_sensor_last = timer.elapsedTime();
 	while (runloop) {
@@ -110,8 +110,8 @@ int main(int argc, char** argv) {
 		timer.waitForNextLoop();
 
 		// read torques from Redis
-		redis_client.getEigenMatrixDerived(JOINT_TORQUES_COMMANDED_KEY, robot_torques);
-		redis_client.getEigenMatrixDerived(JOINT_INTERACTION_TORQUES_COMMANDED_KEY, robot_torques_interact);
+		redis_client.REDIS_GET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, robot_torques);
+		redis_client.REDIS_GET_EIGEN_MATRIX(JOINT_INTERACTION_TORQUES_COMMANDED_KEY, robot_torques_interact);
 		sim->setJointTorques(robot_name, robot_torques + robot_torques_interact);
 
 		// update simulation by 1ms
@@ -125,8 +125,8 @@ int main(int argc, char** argv) {
 		double time_sensor = timer.elapsedTime();
 		if (time_sensor - time_sensor_last >= 1.0 / SENSOR_WRITE_FREQ) {
 			// write joint kinematics to redis
-			redis_client.setEigenMatrixDerived(JOINT_ANGLES_KEY, robot->_q);
-			redis_client.setEigenMatrixDerived(JOINT_VELOCITIES_KEY, robot->_dq);
+			redis_client.REDIS_SET_EIGEN_MATRIX(JOINT_ANGLES_KEY, robot->_q);
+			redis_client.REDIS_SET_EIGEN_MATRIX(JOINT_VELOCITIES_KEY, robot->_dq);
 
 			redis_client.setCommandIs(SIM_TIMESTAMP_KEY, std::to_string(timer.elapsedSimTime()));
 			time_sensor_last = time_sensor;

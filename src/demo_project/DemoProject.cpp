@@ -155,6 +155,7 @@ void DemoProject::initialize() {
 
 	// Demo usage for OptiTrackClient
 	// TODO: Remove
+        /*
 	while (g_runloop) {
                 cout << "tracking..." << endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -173,7 +174,7 @@ void DemoProject::initialize() {
 			cout << '\t' << pos.transpose() << endl;
 		}
 		cout << endl;
-	}
+	}*/
 
 	// Set gains in Redis if not initialized
 	if (!redis_client_.getCommandIs(KP_POSITION_KEY)) {

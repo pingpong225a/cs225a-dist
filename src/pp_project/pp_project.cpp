@@ -22,8 +22,8 @@ using namespace std;
  */
 void PP_Project::readRedisValues() {
 	// read from Redis current sensor values
-	redis_client_.getEigenMatrixDerived(JOINT_ANGLES_KEY, robot->_q);
-	redis_client_.getEigenMatrixDerived(JOINT_VELOCITIES_KEY, robot->_dq);
+	redis_client_.REDIS_GET_EIGEN_MATRIX(JOINT_ANGLES_KEY, robot->_q);
+	redis_client_.REDIS_GET_EIGEN_MATRIX(JOINT_VELOCITIES_KEY, robot->_dq);
 
 	// Get current simulation timestamp from Redis
 	redis_client_.getCommandIs(TIMESTAMP_KEY, redis_buf_);
@@ -44,8 +44,8 @@ void PP_Project::readRedisValues() {
 	kv_joint_ = stoi(redis_buf_);
 
 	// Read in desired end effector position and orientation
-    redis_client_.getEigenMatrixDerived(EE_POSITION_DESIRED_KEY,x_des_);	
-	redis_client_.getEigenMatrixDerived(EE_ORI_DESIRED_KEY,x_rot_mat_des_);
+    redis_client_.REDIS_GET_EIGEN_MATRIX(EE_POSITION_DESIRED_KEY,x_des_);	
+	redis_client_.REDIS_GET_EIGEN_MATRIX(EE_ORI_DESIRED_KEY,x_rot_mat_des_);
 }
 
 /**
@@ -55,11 +55,11 @@ void PP_Project::readRedisValues() {
  */
 void PP_Project::writeRedisValues() {
 	// Send end effector position and desired position
-	redis_client_.setEigenMatrixDerived(EE_POSITION_KEY, x_);
-	redis_client_.setEigenMatrixDerived(EE_POSITION_DESIRED_KEY, x_des_);
+	redis_client_.REDIS_SET_EIGEN_MATRIX(EE_POSITION_KEY, x_);
+	redis_client_.REDIS_SET_EIGEN_MATRIX(EE_POSITION_DESIRED_KEY, x_des_);
 	
 	// Send torques
-	redis_client_.setEigenMatrixDerived(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
+	redis_client_.REDIS_SET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
 }
 
 
@@ -103,6 +103,8 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
 	// Finish if the robot has converged to q_initial
 	Eigen::VectorXd q_err = robot->_q - q_des_;
 	Eigen::VectorXd dq_err = robot->_dq - dq_des_;
+
+        cout << q_err.norm() << endl;
 	if (q_err.norm() < kToleranceInitQ && dq_err.norm() < kToleranceInitDq) {
 		return FINISHED;
 	}
@@ -136,6 +138,7 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 
 	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);
 
+        /*
 	cout << "x_rot_mat_" << endl;
 	cout << x_rot_mat_ << endl;
 	cout << "x_rot_mat_des_" << endl;
@@ -146,6 +149,7 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	cout << "del_pos" << endl;
 	cout << (x_des_ - x_) << endl;
 	cout << "done" << endl;
+        */
 	ee_error << kp_pos_ * (x_des_ - x_),kp_ori_ * -1 * delta;
 	ee_v_error << kv_pos_ * dx_err, kv_ori_ * x_w_;
 	
@@ -202,7 +206,7 @@ void PP_Project::initialize() {
 		redis_client_.setCommandIs(KV_JOINT_KEY, redis_buf_);
 	}
 	if (!redis_client_.getCommandIs(EE_ORI_DESIRED_KEY)) {
-		redis_client_.setEigenMatrixDerived(EE_ORI_DESIRED_KEY, x_rot_mat_des_);
+		redis_client_.REDIS_SET_EIGEN_MATRIX(EE_ORI_DESIRED_KEY, x_rot_mat_des_);
 	}
 }
 
@@ -262,7 +266,7 @@ void PP_Project::runLoop() {
 
 	// Zero out torques before quitting
 	command_torques_.setZero();
-	redis_client_.setEigenMatrixDerived(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
+	redis_client_.REDIS_SET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
 }
 
 int main(int argc, char** argv) {

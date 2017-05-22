@@ -62,13 +62,18 @@ public:
 		command_torques_.setZero();
 
 		// Home configuration for Kuka iiwa
-		//q_des_ << 90, -30, 0, 60, 0, -90, -60;
-		q_des_ << 270, -30, 60, 60, 0, -90, -60;
+		q_des_ << 90, -30, 0, 60, 0, -90, -60;
+		//q_des_ << 270, -30, 60, 60, 0, -90, -60;
 		q_des_ *= M_PI / 180.0;
 		dq_des_.setZero();
 
+                x_rot_mat_des_ << 1, 0, 0,
+                               0, 1, 0,
+                               0, 0, 1;
+
 		// Desired end effector position
-		x_des_ <<0.3, -0.4, 0.7;
+		//x_des_ <<0.3, -0.4, 0.7;
+                x_des_ << -0.1, 0.4, 0.7;
 		dx_des_.setZero();
 
 	}
@@ -98,8 +103,8 @@ protected:
 	/***** Constants *****/
 
 	const int dof;  // Initialized with robot model
-	const double kToleranceInitQ  = 3.1;  // Joint space initialization tolerance
-	const double kToleranceInitDq = 3.1;  // Joint space initialization tolerance
+	const double kToleranceInitQ  = 0.1;  // Joint space initialization tolerance
+	const double kToleranceInitDq = 0.1;  // Joint space initialization tolerance
 	const double kMaxVelocity = 0.5;  // Maximum end effector velocity
 
 	const int kControlFreq = 1000;         // 1 kHz control loop

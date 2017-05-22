@@ -34,7 +34,7 @@ static const string REDIS_KEY_PREFIX = "cs225a::robot::";
 // - write:
 #ifdef USING_KUKA_REDIS_KEYS
 static std::string JOINT_TORQUES_COMMANDED_KEY             = "sai2::KUKA_IIWA::actuators::fgc";
-static std::string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
+static std::string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "sai2::KUKA_IIWA::actuators::fgc_interact";
 #else
 static std::string JOINT_TORQUES_COMMANDED_KEY             = "::actuators::fgc";
 static std::string JOINT_INTERACTION_TORQUES_COMMANDED_KEY = "::actuators::fgc_interact";
@@ -247,8 +247,8 @@ int main(int argc, char** argv) {
 	Eigen::Vector3d x, x_des;            // Current end effector pos
 	Eigen::Vector3d x_prev, x_des_prev;  // Previous end effector pos
 	int idx_traj = 0, idx_des_traj = 0;  // Current idx in trajectory buffer
-	redis_client.getEigenMatrixDerived(EE_POSITION_KEY, x);
-	redis_client.getEigenMatrixDerived(EE_POSITION_DESIRED_KEY, x_des);
+	redis_client.REDIS_GET_EIGEN_MATRIX(EE_POSITION_KEY, x);
+	redis_client.REDIS_GET_EIGEN_MATRIX(EE_POSITION_DESIRED_KEY, x_des);
 	x_prev = x;
 	x_des_prev = x_des;
 
@@ -272,9 +272,9 @@ int main(int argc, char** argv) {
 	Eigen::Vector3d x_ball;
         x_ball << 0, 0, 0;
 	if (redis_client.getCommandIs(BALL_POS_KEY)) {
-            redis_client.getEigenMatrixDerived(BALL_POS_KEY, x_ball);
+            redis_client.REDIS_GET_EIGEN_MATRIX(BALL_POS_KEY, x_ball);
         } else {
-            redis_client.setEigenMatrixDerived(BALL_POS_KEY, x_ball);
+            redis_client.REDIS_SET_EIGEN_MATRIX(BALL_POS_KEY, x_ball);
         }
 
 	// Create trajectory graphics objects and insert them into the chai3d world
@@ -292,14 +292,14 @@ int main(int argc, char** argv) {
     while (!glfwWindowShouldClose(window))
 	{
 		// read from Redis
-		redis_client.getEigenMatrixDerived(JOINT_ANGLES_KEY, robot->_q);
-		redis_client.getEigenMatrixDerived(JOINT_VELOCITIES_KEY, robot->_dq);
+		redis_client.REDIS_GET_EIGEN_MATRIX(JOINT_ANGLES_KEY, robot->_q);
+		redis_client.REDIS_GET_EIGEN_MATRIX(JOINT_VELOCITIES_KEY, robot->_dq);
 
 #ifdef ENABLE_TRAJECTORIES
 		/********** Begin Custom Visualizer Code **********/
 
-		redis_client.getEigenMatrixDerived(EE_POSITION_KEY, x);
-		redis_client.getEigenMatrixDerived(EE_POSITION_DESIRED_KEY, x_des);
+		redis_client.REDIS_GET_EIGEN_MATRIX(EE_POSITION_KEY, x);
+		redis_client.REDIS_GET_EIGEN_MATRIX(EE_POSITION_DESIRED_KEY, x_des);
 
 		// Update end effector position trajectory
 		if ((x - x_prev).norm() > kTrajectoryMinUpdateDistance) {
@@ -324,7 +324,7 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_BALL
 		/********** Begin Custom Visualizer Code **********/
 
-		redis_client.getEigenMatrixDerived(BALL_POS_KEY, x_ball);
+		redis_client.REDIS_GET_EIGEN_MATRIX(BALL_POS_KEY, x_ball);
 
                 /*
 		// Update end effector position trajectory
@@ -448,7 +448,7 @@ int main(int argc, char** argv) {
 		// get UI torques
 		force_widget.getUIJointTorques(interaction_torques);
 		//write to redis
-		redis_client.setEigenMatrixDerived(JOINT_INTERACTION_TORQUES_COMMANDED_KEY, interaction_torques);
+		redis_client.REDIS_SET_EIGEN_MATRIX(JOINT_INTERACTION_TORQUES_COMMANDED_KEY, interaction_torques);
 	}
 
     // destroy context
