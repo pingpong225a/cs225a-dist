@@ -104,7 +104,6 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
 	Eigen::VectorXd q_err = robot->_q - q_des_;
 	Eigen::VectorXd dq_err = robot->_dq - dq_des_;
 
-        cout << q_err.norm() << endl;
 	if (q_err.norm() < kToleranceInitQ && dq_err.norm() < kToleranceInitDq) {
 		return FINISHED;
 	}
@@ -131,35 +130,26 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	//if (v > 1) v = 1;
 	//Eigen::Vector3d dx_err = dx_ - v * dx_des_;
 	//Eigen::Vector3d ddx = -kv_pos_ * dx_err;
-	
 	Eigen::Vector3d delta;	
 	Eigen::VectorXd ee_error(6);
 	Eigen::VectorXd ee_v_error(6);
 
 	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);
+        
 
-        /*
-	cout << "x_rot_mat_" << endl;
-	cout << x_rot_mat_ << endl;
-	cout << "x_rot_mat_des_" << endl;
-	cout << x_rot_mat_des_ << endl;
-	cout << "delta begin" << endl;
-	cout << delta << endl;
-	cout << "delta" << endl;
-	cout << "del_pos" << endl;
-	cout << (x_des_ - x_) << endl;
-	cout << "done" << endl;
-        */
-	ee_error << kp_pos_ * (x_des_ - x_),kp_ori_ * -1 * delta;
+	ee_error << kp_pos_ * (x_des_ - x_), -1 * kp_ori_ * delta;
 	ee_v_error << kv_pos_ * dx_err, kv_ori_ * x_w_;
-	
+
+        //cout << ee_error.norm() << endl;
+        cout << (delta).norm() << endl;
 	// Nullspace posture control and damping
 	Eigen::VectorXd q_err = robot->_q - q_des_;
-	Eigen::VectorXd dq_err = robot->_dq - dq_des_;
-	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
+	Eigen::VectorXd dq_err = robot->_dq ;
+	Eigen::VectorXd ddq = -kp_joint_ * q_err -kv_joint_ * dq_err;
 
 	// Control torques
 	command_torques_ = J0_.transpose() * (L0 * (ee_error - ee_v_error)) + Nbar.transpose() * robot->_M * ddq + g_;
+        //command_torques_ = robot->_M * ddq +  g_;
 	return RUNNING;
 }
 
@@ -235,6 +225,7 @@ void PP_Project::runLoop() {
 
 			// Initialize robot to default joint configuration
 			case JOINT_SPACE_INITIALIZATION:
+                                cout << "Joint space intializatoin" << endl;
 				if (computeJointSpaceControlTorques() == FINISHED) {
 					cout << "Joint position initialized. Switching to operational space controller." << endl;
 					controller_state_ = PP_Project::OP_SPACE_POSITION_CONTROL;

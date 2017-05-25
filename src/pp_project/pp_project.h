@@ -67,13 +67,13 @@ public:
 		q_des_ *= M_PI / 180.0;
 		dq_des_.setZero();
 
-                x_rot_mat_des_ << 1, 0, 0,
-                               0, 1, 0,
+                x_rot_mat_des_ << 0, -1, 0,
+                               1, 0, 0,
                                0, 0, 1;
 
 		// Desired end effector position
 		//x_des_ <<0.3, -0.4, 0.7;
-                x_des_ << -0.1, 0.4, 0.7;
+                x_des_ <<  0.4, 0.5, 0.8;
 		dx_des_.setZero();
 
 	}
@@ -103,8 +103,8 @@ protected:
 	/***** Constants *****/
 
 	const int dof;  // Initialized with robot model
-	const double kToleranceInitQ  = 0.1;  // Joint space initialization tolerance
-	const double kToleranceInitDq = 0.1;  // Joint space initialization tolerance
+	const double kToleranceInitQ  = 1.1;  // Joint space initialization tolerance
+	const double kToleranceInitDq = 1.1;  // Joint space initialization tolerance
 	const double kMaxVelocity = 0.5;  // Maximum end effector velocity
 
 	const int kControlFreq = 1000;         // 1 kHz control loop
@@ -184,12 +184,12 @@ protected:
 	Eigen::MatrixXd In;
 
 	// Default gains (used only when keys are nonexistent in Redis)
-	double kp_pos_ = 150/5;
-	double kv_pos_ = 40/5;
+	double kp_pos_ = 1500; //150/5 ;
+	double kv_pos_ = 35; //40/5 ;
 	double kp_ori_ = 150;
-	double kv_ori_ = 40;
-	double kp_joint_ = 40/2;
-	double kv_joint_ = 10/2;
+	double kv_ori_ = 35;
+	double kp_joint_ = 200;//40/2;
+	double kv_joint_ = 35;//10/2;
 };
 
 #endif //DEMO_PROJECT_H
