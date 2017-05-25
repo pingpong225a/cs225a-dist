@@ -120,6 +120,88 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
  * Controller to move end effector to desired position.
  */
 PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques() {
+	
+
+
+
+// /*	=== Position control test ===	
+
+	// x_des_ << 0.5, 0, 0.8;
+	
+	// Obtain Jacobian
+	Eigen::Vector3d EEdis; EEdis << 0, 0, 0;
+	Eigen::MatrixXd task_jacobian; robot->Jv(task_jacobian, "link6", EEdis);
+
+	// Obtain inertia matrix
+	Eigen::MatrixXd Lambda(3, 3);
+	robot->taskInertiaMatrixWithPseudoInv(Lambda, task_jacobian);
+
+	// Obtain the current positin of end-effector
+	Eigen::Vector3d curr_dx; // Current task space velocity in x, y, z
+	curr_dx = task_jacobian * robot->_dq;
+
+	// Obtain joint space gravity vector
+	Eigen::VectorXd g(dof); robot->gravityVector(g);
+
+	// Obtain end-effector position
+	Eigen::Vector3d curr_x; robot->position(curr_x, "link6", EEdis);
+
+	// Compute force at end-effector
+	Eigen::Vector3d F_op;
+	F_op = Lambda * (kp_pos_ * (x_des_ - curr_x) - kv_pos_*curr_dx);
+		
+
+	// Obtain nullspace matrix
+	Eigen::MatrixXd N(dof, dof);
+	robot->nullspaceMatrix(N, task_jacobian);
+
+	// Compute troques and send to the robot
+	Eigen::VectorXd joint_torques(dof);
+	joint_torques = task_jacobian.transpose() * F_op + g - (N.transpose() * robot->_M * kv_joint_ * robot->_dq);
+	command_torques_ << joint_torques;	
+// */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 	=== Joint position control ===
+
+	q_des_ << -1.5, 0.5, 0.5, 1, 0.5, 0.5, 0.7;
+	
+	Eigen::VectorXd q_err = robot->_q - q_des_;
+	Eigen::VectorXd dq_err = robot->_dq - dq_des_;
+	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
+
+	command_torques_ = robot->_M * (ddq) + g_;
+*/
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*
+
 	// PD position control with velocity saturation
 	Eigen::Vector3d x_err = x_ - x_des_;
 	Eigen::Vector3d dx_err = dx_ - dx_des_;
@@ -150,6 +232,12 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	// Control torques
 	command_torques_ = J0_.transpose() * (L0 * (ee_error - ee_v_error)) + Nbar.transpose() * robot->_M * ddq + g_;
         //command_torques_ = robot->_M * ddq +  g_;
+	
+	*/
+
+
+
+
 	return RUNNING;
 }
 
