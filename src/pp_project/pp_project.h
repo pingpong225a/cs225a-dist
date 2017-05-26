@@ -67,15 +67,15 @@ public:
 		q_des_ *= M_PI / 180.0;
 		dq_des_.setZero();
 
-                x_rot_mat_des_ << 0, -1, 0,
-                               1, 0, 0,
-                               0, 0, 1;
+                x_rot_mat_des_ << 1, 0, 0,
+                               0, -1, 0,
+                               0, 0, -1;
 
 		// Desired end effector position
 		//x_des_ <<0.3, -0.4, 0.7;
-                x_des_ <<  0.4, 0.5, 0.8;
+                x_des_ <<  0.4, -0.5, 0.5;
 		dx_des_.setZero();
-
+		dphi_.setZero();
 	}
 
 	/***** Public functions *****/
@@ -176,6 +176,7 @@ protected:
 	Eigen::Matrix3d x_rot_mat_;
 	Eigen::Matrix3d x_rot_mat_des_;
 	Eigen::Vector3d x_w_;
+	Eigen::Vector3d dphi_;
 
 	Eigen::MatrixXd J0_;
 	Eigen::MatrixXd Jbar;	
@@ -184,12 +185,12 @@ protected:
 	Eigen::MatrixXd In;
 
 	// Default gains (used only when keys are nonexistent in Redis)
-	double kp_pos_ = 150/5; //150/5 ;
-	double kv_pos_ = 40/5; //40/5 ;
-	double kp_ori_ = 150;
-	double kv_ori_ = 35;
-	double kp_joint_ = 40/2;//40/2;
-	double kv_joint_ = 10/2;//10/2;
+	double kp_pos_ = 5;//20 ;
+	double kv_pos_ = 10;//10 ;
+	double kp_ori_ = 0;//40;
+	double kv_ori_ = 10;//20;
+	double kp_joint_ = 10;//40/2;
+	double kv_joint_ = 10;//10/2;
 };
 
 #endif //DEMO_PROJECT_H

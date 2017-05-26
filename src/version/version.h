@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-//#define USING_KUKA_REDIS_KEYS
+//#define USING_KUKA_REDIS_KEYS 1
 
 
 #ifdef USING_KUKA_REDIS_KEYS

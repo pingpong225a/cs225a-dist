@@ -15,6 +15,7 @@ static inline bool isnan(const Eigen::MatrixBase<Derived>& x) {
 
 using namespace std;
 
+
 /**
  * PP_Project::readRedisValues()
  * ------------------------------
@@ -57,6 +58,8 @@ void PP_Project::writeRedisValues() {
 	// Send end effector position and desired position
 	redis_client_.REDIS_SET_EIGEN_MATRIX(EE_POSITION_KEY, x_);
 	redis_client_.REDIS_SET_EIGEN_MATRIX(EE_POSITION_DESIRED_KEY, x_des_);
+
+	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::dphi", dphi_);
 	
 	// Send torques
 	redis_client_.REDIS_SET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
@@ -88,10 +91,12 @@ void PP_Project::updateModel() {
 		
 	// Dynamics
 	robot->gravityVector(g_);
-	L0 = (J0_ * robot->_M_inv * J0_.transpose()).inverse();
-	Jbar = robot->_M_inv * J0_.transpose() * L0;
-	const Eigen::MatrixXd In = Eigen::MatrixXd::Identity(robot->dof(), robot->dof());
-	Nbar = In - Jbar*J0_;
+	robot->taskInertiaMatrixWithPseudoInv(L0, J0_);
+	robot->nullspaceMatrix(Nbar, J0_);
+	// L0 = (J0_ * robot->_M_inv * J0_.transpose()).inverse();
+	// Jbar = robot->_M_inv * J0_.transpose() * L0;
+	// const Eigen::MatrixXd In = Eigen::MatrixXd::Identity(robot->dof(), robot->dof());
+	// Nbar = In - Jbar*J0_;
 }
 
 /**
@@ -110,7 +115,7 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
 
 	// Compute torques
 	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
-	command_torques_ = robot->_M * ddq + g_;
+	command_torques_ = robot->_M * ddq; //+ g_;
 	return RUNNING;
 }
 
@@ -124,42 +129,95 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 
 
 
-// /*	=== Position control test ===	
 
-	// x_des_ << 0.5, 0, 0.8;
+
+
+
+//=== Oreintation control test ===
+	/*
 	
-	// Obtain Jacobian
+	x_rot_mat_des_ << cos(M_PI/3), 0, sin(M_PI/3), 0, 1, 0, -sin(M_PI/3), 0, cos(M_PI/3); // Desired orientation
+
+	// Obtain current end-effector linear velocity
 	Eigen::Vector3d EEdis; EEdis << 0, 0, 0;
-	Eigen::MatrixXd task_jacobian; robot->Jv(task_jacobian, "link6", EEdis);
+	Eigen::Vector3d curr_dx; robot->linearVelocity(curr_dx, "link6", EEdis);
+
+	// Compute delta_phi
+	Eigen::Vector3d delta_phi; robot->orientationError(delta_phi, x_rot_mat_des_, x_rot_mat_);
+
+	// Obtain full jacobian with both linear and angular portions
+	Eigen::MatrixXd J_full(6, dof); robot->J_0(J_full, "link6", EEdis);
+
+	// Compute Force (both linear and angular portions)
+	Eigen::Vector3d F_linear; F_linear = kp_pos_ * (x_des_ - x_) - kv_pos_ * curr_dx;
+	Eigen::Vector3d F_angular; F_angular = kp_joint_ * (-1) * delta_phi - kv_joint_ * x_w_;
+	Eigen::VectorXd F_full(6); F_full.setZero(); // Force vector with linear and angular components
+	F_full << F_linear, F_angular;
+
+	Eigen::MatrixXd Lambda_0(6,6); robot->taskInertiaMatrix(Lambda_0, J_full); // Operational space matrix
+	F_full = Lambda_0 * F_full;
+
+	// Compute torques
+	Eigen::VectorXd joint_torques(dof);
+	joint_torques = J_full.transpose() * F_full ;
+
+	command_torques_ << joint_torques;	
+
+
+	// cout << EE_angular_w << "\n" << endl;
+	// cout << x_w_ << "\n" << endl;
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//=== Position control test ===	
+
+	// Obtain Jacobian
+	/*
+	Eigen::Vector3d EEdis; EEdis << 0, 0, 0;
+	Eigen::MatrixXd J_linear; robot->Jv(J_linear, "link6", EEdis);
 
 	// Obtain inertia matrix
 	Eigen::MatrixXd Lambda(3, 3);
-	robot->taskInertiaMatrixWithPseudoInv(Lambda, task_jacobian);
-
-	// Obtain the current positin of end-effector
-	Eigen::Vector3d curr_dx; // Current task space velocity in x, y, z
-	curr_dx = task_jacobian * robot->_dq;
-
-	// Obtain joint space gravity vector
-	Eigen::VectorXd g(dof); robot->gravityVector(g);
-
-	// Obtain end-effector position
-	Eigen::Vector3d curr_x; robot->position(curr_x, "link6", EEdis);
+	robot->taskInertiaMatrixWithPseudoInv(Lambda, J_linear);
 
 	// Compute force at end-effector
 	Eigen::Vector3d F_op;
-	F_op = Lambda * (kp_pos_ * (x_des_ - curr_x) - kv_pos_*curr_dx);
+	F_op = Lambda * (kp_pos_ * (x_des_ - x_) - kv_pos_ * dx_);
 		
-
 	// Obtain nullspace matrix
 	Eigen::MatrixXd N(dof, dof);
-	robot->nullspaceMatrix(N, task_jacobian);
+	robot->nullspaceMatrix(N, J_linear);
 
 	// Compute troques and send to the robot
 	Eigen::VectorXd joint_torques(dof);
-	joint_torques = task_jacobian.transpose() * F_op + g - (N.transpose() * robot->_M * kv_joint_ * robot->_dq);
+	// joint_torques = J_linear.transpose() * F_op + g_ - kv_joint_ * robot->_dq;
+	joint_torques = J_linear.transpose() * F_op  - (N.transpose() * robot->_M * kv_joint_ * robot->_dq);
+
 	command_torques_ << joint_torques;	
-// */
 
 
 
@@ -172,68 +230,53 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 
 
 
-
-
-
-/* 	=== Joint position control ===
-
+	=== Joint position control ===
 	q_des_ << -1.5, 0.5, 0.5, 1, 0.5, 0.5, 0.7;
 	
 	Eigen::VectorXd q_err = robot->_q - q_des_;
 	Eigen::VectorXd dq_err = robot->_dq - dq_des_;
 	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
-
 	command_torques_ = robot->_M * (ddq) + g_;
 */
 
-	
 
-
-
-
-
-
-
-
-
-
-
-
-
-	/*
-
+	// /*
 	// PD position control with velocity saturation
 	Eigen::Vector3d x_err = x_ - x_des_;
 	Eigen::Vector3d dx_err = dx_ - dx_des_;
 	Eigen::Vector3d ddx = -kp_pos_ * x_err - kv_pos_ * dx_err;
-
 	//dx_des_ = -(kp_pos_ / kv_pos_) * x_err;
 	//double v = kMaxVelocity / dx_des_.norm();
 	//if (v > 1) v = 1;
 	//Eigen::Vector3d dx_err = dx_ - v * dx_des_;
 	//Eigen::Vector3d ddx = -kv_pos_ * dx_err;
-	Eigen::Vector3d delta;	
-	Eigen::VectorXd ee_error(6);
-	Eigen::VectorXd ee_v_error(6);
+	Eigen::Vector3d delta;											// Orientation error
+	Eigen::VectorXd ee_error(6);									// Position error at end-effector
+	Eigen::VectorXd ee_v_error(6);									// Velocity error at end-effector
+	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);		// 
+    Eigen::Vector3d dw = -kp_ori_ * delta - kv_ori_ * x_w_;
+    Eigen::VectorXd ddx_dw(6);
+    ddx_dw << ddx, dw;
+    dphi_ = delta;
 
-	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);
+	// ee_error << kp_pos_ * (x_des_ - x_), -1 * kp_ori_ * delta;
+	// ee_v_error << kv_pos_ * dx_err, kv_ori_ * x_w_;
         
-
-	ee_error << kp_pos_ * (x_des_ - x_), -1 * kp_ori_ * delta;
-	ee_v_error << kv_pos_ * dx_err, kv_ori_ * x_w_;
-
         //cout << ee_error.norm() << endl;
-        cout << (delta).norm() << endl;
+        // cout << (delta).norm() << endl;
+
 	// Nullspace posture control and damping
 	Eigen::VectorXd q_err = robot->_q - q_des_;
 	Eigen::VectorXd dq_err = robot->_dq ;
 	Eigen::VectorXd ddq = -kp_joint_ * q_err -kv_joint_ * dq_err;
-
+    command_torques_ = J0_.transpose() * L0 * ddx_dw + Nbar.transpose() * robot->_M * ddq;
 	// Control torques
-	command_torques_ = J0_.transpose() * (L0 * (ee_error - ee_v_error)) + Nbar.transpose() * robot->_M * ddq + g_;
-        //command_torques_ = robot->_M * ddq +  g_;
-	
-	*/
+	// command_torques_ = J0_.transpose() * (L0 * (ee_error  - ee_v_error)) + Nbar.transpose() * robot->_M * ddq ;
+    //command_torques_ = robot->_M * ddq;// +  g_;
+    //cout << "robot->_q" << endl; 
+	//cout << robot->_q << endl;
+	//cout << g_.transpose() << endl;
+	// */
 
 
 
