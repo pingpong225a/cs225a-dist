@@ -49,6 +49,7 @@ static std::string JOINT_VELOCITIES_KEY = "::sensors::dq";
 #endif
 
 static string BALL_POS_KEY    = "ball_pos";
+static string BALL_PRED_POS_KEY    = "ball_pred_pos";
 
 // function to parse command line arguments
 static void parseCommandline(int argc, char** argv);
@@ -152,6 +153,7 @@ static int updateTrajectoryPoint(chai3d::cMultiSegment *trajectory, int idx_traj
 // Chai3d graphics names
 // - Created inside visualizer_main.cpp
 static string BALL_POSITION_CHAI_NAME         = BALL_POS_KEY + "_traj";
+static string BALL_PRED_POSITION_CHAI_NAME         = BALL_PRED_POS_KEY + "_traj";
 // - Created inside world.urdf
 //static string EE_POSITION_DESIRED_URDF_NAME   = EE_POSITION_DESIRED_KEY;
 
@@ -277,10 +279,20 @@ int main(int argc, char** argv) {
             redis_client.REDIS_SET_EIGEN_MATRIX(BALL_POS_KEY, x_ball);
         }
 
+	Eigen::Vector3d x_ball_pred;
+        x_ball_pred << 0, 0, 0;
+	if (redis_client.getCommandIs(BALL_PRED_POS_KEY)) {
+            redis_client.REDIS_GET_EIGEN_MATRIX(BALL_PRED_POS_KEY, x_ball_pred);
+        } else {
+            redis_client.REDIS_SET_EIGEN_MATRIX(BALL_PRED_POS_KEY, x_ball_pred);
+        }
+
 	// Create trajectory graphics objects and insert them into the chai3d world
 	auto x_ball_sphere = createSphere(BALL_POSITION_CHAI_NAME, x_ball);
+	auto x_ball_pred_sphere = createSphere(BALL_PRED_POSITION_CHAI_NAME, x_ball_pred);
 	//x_ball_sphere->setColor(chai3d::cColorf(1.0, 0.0, 0.0, 1.0));  // Red for x_des
 	graphics->_world->addChild(x_ball_sphere);
+	graphics->_world->addChild(x_ball_pred_sphere);
 
 	// Retrieve cs225a::<robot_name>::tasks::ee_pos_des sphere marker from world.urdf
 	// auto x_ball_marker = findObjectInWorld(graphics->_world, EE_POSITION_DESIRED_URDF_NAME);
@@ -325,6 +337,7 @@ int main(int argc, char** argv) {
 		/********** Begin Custom Visualizer Code **********/
 
 		redis_client.REDIS_GET_EIGEN_MATRIX(BALL_POS_KEY, x_ball);
+		redis_client.REDIS_GET_EIGEN_MATRIX(BALL_PRED_POS_KEY, x_ball_pred);
 
                 /*
 		// Update end effector position trajectory
@@ -343,8 +356,8 @@ int main(int argc, char** argv) {
 		if (x_des_marker != nullptr) {
 			x_des_marker->setLocalPos(chai3d::cVector3d(x_des));
 		}*/
-                Eigen::Vector3d x_ball_vis;
                 x_ball_sphere->setLocalPos(chai3d::cVector3d(x_ball));
+                x_ball_pred_sphere->setLocalPos(chai3d::cVector3d(x_ball_pred));
 
 		/********** End Custom Visualizer Code **********/
 #endif // ENABLE_BALL
