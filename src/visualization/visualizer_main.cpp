@@ -151,7 +151,7 @@ static int updateTrajectoryPoint(chai3d::cMultiSegment *trajectory, int idx_traj
 
 // Chai3d graphics names
 // - Created inside visualizer_main.cpp
-static string BALL_POSITION_CHAI_NAME         = EE_POSITION_KEY + "_traj";
+static string BALL_POSITION_CHAI_NAME         = BALL_POS_KEY + "_traj";
 // - Created inside world.urdf
 //static string EE_POSITION_DESIRED_URDF_NAME   = EE_POSITION_DESIRED_KEY;
 
@@ -159,7 +159,7 @@ static string BALL_POSITION_CHAI_NAME         = EE_POSITION_KEY + "_traj";
  */
 static chai3d::cShapeSphere *createSphere(const string &graphics_name, const Eigen::Vector3d &starting_point) {
 	// Create graphics object
-	auto sphere = new chai3d::cShapeSphere(0.1);
+	auto sphere = new chai3d::cShapeSphere(0.02);
 	sphere->m_name = graphics_name;
         return sphere;
 
@@ -343,6 +343,7 @@ int main(int argc, char** argv) {
 		if (x_des_marker != nullptr) {
 			x_des_marker->setLocalPos(chai3d::cVector3d(x_des));
 		}*/
+                Eigen::Vector3d x_ball_vis;
                 x_ball_sphere->setLocalPos(chai3d::cVector3d(x_ball));
 
 		/********** End Custom Visualizer Code **********/
