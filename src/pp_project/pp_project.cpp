@@ -65,6 +65,8 @@ void PP_Project::writeRedisValues() {
 	redis_client_.REDIS_SET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
 
 	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::pos_err",x_err);
+            
+        redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::x_rot_mat_", x_rot_mat_);
 }
 
 
@@ -154,7 +156,7 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	Eigen::VectorXd ddq = -kp_joint_ * q_err -kv_joint_ * dq_err;
 	
 	command_torques_ = J0_.transpose() * (L0 * (ee_error  + ee_v_error)) + Nbar.transpose() * robot->_M * ddq ;
-    
+//        command_torques_ = robot->_M * ddq;  
 	return RUNNING;
 }
 
