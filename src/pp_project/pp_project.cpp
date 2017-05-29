@@ -27,8 +27,8 @@ void PP_Project::readRedisValues() {
 	redis_client_.REDIS_GET_EIGEN_MATRIX(JOINT_VELOCITIES_KEY, robot->_dq);
 
 	// Get current simulation timestamp from Redis
-	redis_client_.getCommandIs(TIMESTAMP_KEY, redis_buf_);
-	t_curr_ = stod(redis_buf_);
+	//redis_client_.getCommandIs(TIMESTAMP_KEY, redis_buf_);
+	//t_curr_ = stod(redis_buf_);
 
 	// Read in KP and KV from Redis (can be changed on the fly in Redis)
 	redis_client_.getCommandIs(KP_POSITION_KEY, redis_buf_);
@@ -59,10 +59,12 @@ void PP_Project::writeRedisValues() {
 	redis_client_.REDIS_SET_EIGEN_MATRIX(EE_POSITION_KEY, x_);
 	redis_client_.REDIS_SET_EIGEN_MATRIX(EE_POSITION_DESIRED_KEY, x_des_);
 
-	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::dphi", dphi_);
+	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::delta", delta);
 	
 	// Send torques
 	redis_client_.REDIS_SET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
+
+	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::pos_err",x_err);
 }
 
 
@@ -93,10 +95,7 @@ void PP_Project::updateModel() {
 	robot->gravityVector(g_);
 	robot->taskInertiaMatrixWithPseudoInv(L0, J0_);
 	robot->nullspaceMatrix(Nbar, J0_);
-	// L0 = (J0_ * robot->_M_inv * J0_.transpose()).inverse();
-	// Jbar = robot->_M_inv * J0_.transpose() * L0;
-	// const Eigen::MatrixXd In = Eigen::MatrixXd::Identity(robot->dof(), robot->dof());
-	// Nbar = In - Jbar*J0_;
+
 }
 
 /**
@@ -119,170 +118,47 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
 	return RUNNING;
 }
 
+
+
 /**
  * PP_Project::computeOperationalSpaceControlTorques()
  * ----------------------------------------------------
  * Controller to move end effector to desired position.
  */
 PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques() {
-	
-
-
-
-
-
-
-
-//=== Oreintation control test ===
-	/*
-	
-	x_rot_mat_des_ << cos(M_PI/3), 0, sin(M_PI/3), 0, 1, 0, -sin(M_PI/3), 0, cos(M_PI/3); // Desired orientation
-
-	// Obtain current end-effector linear velocity
-	Eigen::Vector3d EEdis; EEdis << 0, 0, 0;
-	Eigen::Vector3d curr_dx; robot->linearVelocity(curr_dx, "link6", EEdis);
-
-	// Compute delta_phi
-	Eigen::Vector3d delta_phi; robot->orientationError(delta_phi, x_rot_mat_des_, x_rot_mat_);
-
-	// Obtain full jacobian with both linear and angular portions
-	Eigen::MatrixXd J_full(6, dof); robot->J_0(J_full, "link6", EEdis);
-
-	// Compute Force (both linear and angular portions)
-	Eigen::Vector3d F_linear; F_linear = kp_pos_ * (x_des_ - x_) - kv_pos_ * curr_dx;
-	Eigen::Vector3d F_angular; F_angular = kp_joint_ * (-1) * delta_phi - kv_joint_ * x_w_;
-	Eigen::VectorXd F_full(6); F_full.setZero(); // Force vector with linear and angular components
-	F_full << F_linear, F_angular;
-
-	Eigen::MatrixXd Lambda_0(6,6); robot->taskInertiaMatrix(Lambda_0, J_full); // Operational space matrix
-	F_full = Lambda_0 * F_full;
-
-	// Compute torques
-	Eigen::VectorXd joint_torques(dof);
-	joint_torques = J_full.transpose() * F_full ;
-
-	command_torques_ << joint_torques;	
-
-
-	// cout << EE_angular_w << "\n" << endl;
-	// cout << x_w_ << "\n" << endl;
-
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//=== Position control test ===	
-
-	// Obtain Jacobian
-	/*
-	Eigen::Vector3d EEdis; EEdis << 0, 0, 0;
-	Eigen::MatrixXd J_linear; robot->Jv(J_linear, "link6", EEdis);
-
-	// Obtain inertia matrix
-	Eigen::MatrixXd Lambda(3, 3);
-	robot->taskInertiaMatrixWithPseudoInv(Lambda, J_linear);
-
-	// Compute force at end-effector
-	Eigen::Vector3d F_op;
-	F_op = Lambda * (kp_pos_ * (x_des_ - x_) - kv_pos_ * dx_);
-		
-	// Obtain nullspace matrix
-	Eigen::MatrixXd N(dof, dof);
-	robot->nullspaceMatrix(N, J_linear);
-
-	// Compute troques and send to the robot
-	Eigen::VectorXd joint_torques(dof);
-	// joint_torques = J_linear.transpose() * F_op + g_ - kv_joint_ * robot->_dq;
-	joint_torques = J_linear.transpose() * F_op  - (N.transpose() * robot->_M * kv_joint_ * robot->_dq);
-
-	command_torques_ << joint_torques;	
-
-
-
-
-
-
-
-
-
-
-
-
-	=== Joint position control ===
-	q_des_ << -1.5, 0.5, 0.5, 1, 0.5, 0.5, 0.7;
-	
-	Eigen::VectorXd q_err = robot->_q - q_des_;
-	Eigen::VectorXd dq_err = robot->_dq - dq_des_;
-	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
-	command_torques_ = robot->_M * (ddq) + g_;
-*/
-
-
 	// /*
 	// PD position control with velocity saturation
-	Eigen::Vector3d x_err = x_ - x_des_;
+	x_err = x_ - x_des_;
 	Eigen::Vector3d dx_err = dx_ - dx_des_;
 	Eigen::Vector3d ddx = -kp_pos_ * x_err - kv_pos_ * dx_err;
+	
 	//dx_des_ = -(kp_pos_ / kv_pos_) * x_err;
 	//double v = kMaxVelocity / dx_des_.norm();
 	//if (v > 1) v = 1;
 	//Eigen::Vector3d dx_err = dx_ - v * dx_des_;
 	//Eigen::Vector3d ddx = -kv_pos_ * dx_err;
-	Eigen::Vector3d delta;											// Orientation error
+		
 	Eigen::VectorXd ee_error(6);									// Position error at end-effector
 	Eigen::VectorXd ee_v_error(6);									// Velocity error at end-effector
-	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);		// 
-    Eigen::Vector3d dw = -kp_ori_ * delta - kv_ori_ * x_w_;
-    Eigen::VectorXd ddx_dw(6);
-    ddx_dw << ddx, dw;
-    dphi_ = delta;
+									// Orientation error
+	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);		
+    
 
-	// ee_error << kp_pos_ * (x_des_ - x_), -1 * kp_ori_ * delta;
-	// ee_v_error << kv_pos_ * dx_err, kv_ori_ * x_w_;
-        
-        //cout << ee_error.norm() << endl;
-        // cout << (delta).norm() << endl;
+	ee_error << -1 * kp_pos_ * x_err , -1 * kp_ori_ * delta;
+
+	ee_v_error << -1 * kv_pos_ * dx_err, -1 * kv_ori_ * x_w_;
 
 	// Nullspace posture control and damping
 	Eigen::VectorXd q_err = robot->_q - q_des_;
 	Eigen::VectorXd dq_err = robot->_dq ;
 	Eigen::VectorXd ddq = -kp_joint_ * q_err -kv_joint_ * dq_err;
-    command_torques_ = J0_.transpose() * L0 * ddx_dw + Nbar.transpose() * robot->_M * ddq;
-	// Control torques
-	// command_torques_ = J0_.transpose() * (L0 * (ee_error  - ee_v_error)) + Nbar.transpose() * robot->_M * ddq ;
-    //command_torques_ = robot->_M * ddq;// +  g_;
-    //cout << "robot->_q" << endl; 
-	//cout << robot->_q << endl;
-	//cout << g_.transpose() << endl;
-	// */
-
-
-
-
+	
+	command_torques_ = J0_.transpose() * (L0 * (ee_error  + ee_v_error)) + Nbar.transpose() * robot->_M * ddq ;
+    
 	return RUNNING;
 }
+
+
 
 /**
  * public PP_Project::initialize()

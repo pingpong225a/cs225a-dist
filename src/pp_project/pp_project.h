@@ -63,17 +63,15 @@ public:
 
 		// Home configuration for Kuka iiwa
 		q_des_ << 90, -30, 0, 60, 0, -90, -60;
-		//q_des_ << 270, -30, 60, 60, 0, -90, -60;
 		q_des_ *= M_PI / 180.0;
 		dq_des_.setZero();
 
-                x_rot_mat_des_ << 1, 0, 0,
-                               0, -1, 0,
-                               0, 0, -1;
+        x_rot_mat_des_ << 0, 0, 1,
+                           0, 1, 0,
+                          1, 0, 0;
 
 		// Desired end effector position
-		//x_des_ <<0.3, -0.4, 0.7;
-                x_des_ <<  0.4, -0.5, 0.5;
+        x_des_ <<  0.3, -0.4, 0.5;
 		dx_des_.setZero();
 		dphi_.setZero();
 	}
@@ -184,13 +182,16 @@ protected:
 	Eigen::MatrixXd L0;
 	Eigen::MatrixXd In;
 
+	Eigen::Vector3d x_err;
+	Eigen::Vector3d delta;
+
 	// Default gains (used only when keys are nonexistent in Redis)
-	double kp_pos_ = 5;//20 ;
-	double kv_pos_ = 10;//10 ;
-	double kp_ori_ = 0;//40;
-	double kv_ori_ = 10;//20;
-	double kp_joint_ = 10;//40/2;
-	double kv_joint_ = 10;//10/2;
+	double kp_pos_ = 15;//20 ;
+	double kv_pos_ = 8;
+	double kp_ori_ = 200;//40;
+	double kv_ori_ = 8;//20;
+	double kp_joint_ = 20;//40/2;
+	double kv_joint_ = 5;//10/2;
 };
 
 #endif //DEMO_PROJECT_H
