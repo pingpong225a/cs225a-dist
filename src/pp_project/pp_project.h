@@ -184,11 +184,11 @@ protected:
 	Eigen::Vector3d delta;
 
 	// Default gains (used only when keys are nonexistent in Redis)
-	double kp_pos_ = 0; // 15;//20 ;
+	double kp_pos_ = 15; // 15;//20 ;
 	double kv_pos_ = 8; // 8;
-	double kp_ori_ = 0;//40;
+	double kp_ori_ = 40;//40;
 	double kv_ori_ = 20; // 8;//20;
-	double kp_joint_ = 0;//40/2;
+	double kp_joint_ = 20;//40/2;
 	double kv_joint_ = 8; // 5;//10/2;
 };
 
