@@ -59,14 +59,11 @@ void PP_Project::writeRedisValues() {
 	redis_client_.REDIS_SET_EIGEN_MATRIX(EE_POSITION_KEY, x_);
 	redis_client_.REDIS_SET_EIGEN_MATRIX(EE_POSITION_DESIRED_KEY, x_des_);
 
-	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::delta", delta);
-	
 	// Send torques
 	redis_client_.REDIS_SET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
-
-	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::pos_err",x_err);
-            
-        redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::x_rot_mat_", x_rot_mat_);
+	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::pos_err",x_err);            
+    redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::x_rot_mat_", x_rot_mat_);
+	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::delta", delta);
 }
 
 
@@ -97,7 +94,6 @@ void PP_Project::updateModel() {
 	robot->gravityVector(g_);
 	robot->taskInertiaMatrixWithPseudoInv(L0, J0_);
 	robot->nullspaceMatrix(Nbar, J0_);
-
 }
 
 /**
@@ -128,35 +124,38 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
  * Controller to move end effector to desired position.
  */
 PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques() {
-	// /*
+	
 	// PD position control with velocity saturation
 	x_err = x_ - x_des_;
-	Eigen::Vector3d dx_err = dx_ - dx_des_;
-	Eigen::Vector3d ddx = -kp_pos_ * x_err - kv_pos_ * dx_err;
 	
-	//dx_des_ = -(kp_pos_ / kv_pos_) * x_err;
-	//double v = kMaxVelocity / dx_des_.norm();
-	//if (v > 1) v = 1;
-	//Eigen::Vector3d dx_err = dx_ - v * dx_des_;
-	//Eigen::Vector3d ddx = -kv_pos_ * dx_err;
-		
 	Eigen::VectorXd ee_error(6);									// Position error at end-effector
 	Eigen::VectorXd ee_v_error(6);									// Velocity error at end-effector
-									// Orientation error
+
+	// Orientation error
 	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);		
     
+    bool velocityControl = true;
 
-	ee_error << -1 * kp_pos_ * x_err , -1 * kp_ori_ * delta;
-
-	ee_v_error << -1 * kv_pos_ * dx_err, -1 * kv_ori_ * x_w_;
+    if(velocityControl){
+    	dx_des_ = -(kp_pos_ / kv_pos_) * x_err;
+		double v = kMaxVelocity / dx_des_.norm();
+		if (v > 1) v = 1;
+		Eigen::Vector3d dx_err = dx_ - v * dx_des_;
+		Eigen::Vector3d ddx = -kv_pos_ * dx_err;
+    	ee_error << ddx , -1 * kp_ori_ * delta ;
+        ee_v_error << 0,0,0, -1 * kv_ori_ * x_w_;
+    }
+	else{
+		ee_error << -1 * kp_pos_ * x_err , -1 * kp_ori_ * delta;
+	    ee_v_error << -1 * kv_pos_ * dx_, -1 * kv_ori_ * x_w_;
+    }
 
 	// Nullspace posture control and damping
 	Eigen::VectorXd q_err = robot->_q - q_des_;
 	Eigen::VectorXd dq_err = robot->_dq ;
 	Eigen::VectorXd ddq = -kp_joint_ * q_err -kv_joint_ * dq_err;
 	
-	command_torques_ = J0_.transpose() * (L0 * (ee_error  + ee_v_error)) + Nbar.transpose() * robot->_M * ddq ;
-//        command_torques_ = robot->_M * ddq;  
+	command_torques_ = J0_.transpose() * (L0 * (ee_error  + ee_v_error)) + Nbar.transpose() * robot->_M * ddq;
 	return RUNNING;
 }
 

@@ -70,7 +70,7 @@ public:
 
 		// Desired end effector position
                 //x_des_ <<  0.05, -0.62, 0.60;
-                x_des_ << 0.05, -0.62, 0.3;
+                x_des_ << 0.05, -0.62, 0.6;
 		dx_des_.setZero();
 		dphi_.setZero();
 	}

@@ -13,12 +13,12 @@
                 <mesh filename="kuka_iiwa_graphics/base.obj" scale="1 1 1" />
             </geometry>
         </visual>
-        <!-- <collision>
+        <collision>
             <origin xyz="0 0 0" rpy="0 -0 0" />
             <geometry>
                 <mesh filename="kuka_iiwa_graphics/base.obj" scale="1 1 1" />
             </geometry>
-        </collision> -->
+        </collision>
     </link>
     <link name="link0">
         <inertial>
@@ -32,12 +32,12 @@
                 <mesh filename="kuka_iiwa_graphics/link0.obj" scale="1 1 1" />
             </geometry>
         </visual>
-        <!-- <collision>
+        <collision>
             <origin xyz="0 0 0" rpy="0 -0 0" />
             <geometry>
                 <mesh filename="kuka_iiwa_graphics/link0.obj" scale="1 1 1" />
             </geometry>
-        </collision> -->
+        </collision> 
     </link>
     <link name="link1">
         <inertial>
@@ -51,12 +51,12 @@
                 <mesh filename="kuka_iiwa_graphics/link1.obj" scale="1 1 1" />
             </geometry>
         </visual>
-        <!-- <collision>
+        <collision>
             <origin xyz="0 0 0" rpy="0 -0 0" />
             <geometry>
                 <mesh filename="kuka_iiwa_graphics/link1.obj" scale="1 1 1" />
             </geometry>
-        </collision> -->
+        </collision> 
     </link>
     <link name="link2">
         <inertial>
@@ -70,12 +70,12 @@
                 <mesh filename="kuka_iiwa_graphics/link2.obj" scale="1 1 1" />
             </geometry>
         </visual>
-        <!-- <collision>
+        <collision>
             <origin xyz="0 0 0" rpy="0 -0 0" />
             <geometry>
                 <mesh filename="kuka_iiwa_graphics/link2.obj" scale="1 1 1" />
             </geometry>
-        </collision> -->
+        </collision> 
     </link>
     <link name="link3">
         <inertial>
@@ -89,12 +89,12 @@
                 <mesh filename="kuka_iiwa_graphics/link3.obj" scale="1 1 1" />
             </geometry>
         </visual>
-        <!-- <collision>
+        <collision>
             <origin xyz="0 0 0" rpy="0 -0 0" />
             <geometry>
                 <mesh filename="kuka_iiwa_graphics/link3.obj" scale="1 1 1" />
             </geometry>
-        </collision> -->
+        </collision> 
     </link>
     <link name="link4">
         <inertial>
@@ -108,12 +108,12 @@
                 <mesh filename="kuka_iiwa_graphics/link4.obj" scale="1 1 1" />
             </geometry>
         </visual>
-        <!-- <collision>
+        <collision>
             <origin xyz="0 0 0" rpy="0 -0 0" />
             <geometry>
                 <mesh filename="kuka_iiwa_graphics/link4.obj" scale="1 1 1" />
             </geometry>
-        </collision> -->
+        </collision> 
     </link>
     <link name="link5">
         <inertial>
@@ -127,12 +127,12 @@
                 <mesh filename="kuka_iiwa_graphics/link5.obj" scale="1 1 1" />
             </geometry>
         </visual>
-        <!-- <collision>
+        <collision>
             <origin xyz="0 -0.06 0" rpy="0 -0 0" />
             <geometry>
                 <mesh filename="kuka_iiwa_graphics/link5.obj" scale="1 1 1" />
             </geometry>
-        </collision> -->
+        </collision> 
     </link>
     <link name="link6">
         <inertial>
