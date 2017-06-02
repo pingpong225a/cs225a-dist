@@ -62,15 +62,19 @@ public:
 		command_torques_.setZero();
 
 		// Home configuration for Kuka iiwa
+		//q_des_ << 0, 40, 0, -60, 0, -10, 0;
 		q_des_ << 90, -30, 0, 60, 0, -90, -60;
 		q_des_ *= M_PI / 180.0;
-                dq_des_.setZero();
+        
+        dq_des_.setZero();
 
-                x_rot_mat_des_ << 0.011532413026, 0.141211111887, 0.989912332143, -0.998752865351, -0.046466600672 ,0.018263870763, 0.048576922535 ,-0.988888404676 ,0.140499130586;
+        //x_rot_mat_des_ << 0.323998455797,-0.478154123748 ,.816329366484, -0.946057259140,-0.163011752550,0.280005055239,-0.000814291144,-0.863015528524,-0.505176735863;
+
+        x_rot_mat_des_ << 0.292063001039, -0.323931212211, 0.899870975851, -0.953166683688, -0.175878542620, 0.246048798725, 0.078565110144, -0.929588784357, -0.360128054262;
 
 		// Desired end effector position
-                //x_des_ <<  0.05, -0.62, 0.60;
-                x_des_ << 0.05, -0.62, 0.6;
+        //x_des_ << 0.05, -0.62, 0.6;
+        x_des_ << 0.25, -0.52, 0.5;
 		dx_des_.setZero();
 		dphi_.setZero();
 	}
@@ -100,9 +104,9 @@ protected:
 	/***** Constants *****/
 
 	const int dof;  // Initialized with robot model
-	const double kToleranceInitQ  = 1.1;  // Joint space initialization tolerance
-	const double kToleranceInitDq = 1.1;  // Joint space initialization tolerance
-	const double kMaxVelocity = 0.5;  // Maximum end effector velocity
+	const double kToleranceInitQ  = 1.5;  // Joint space initialization tolerance
+	const double kToleranceInitDq = 1.5;  // Joint space initialization tolerance
+	const double kMaxVelocity = 1.0;  // Maximum end effector velocity
 
 	const int kControlFreq = 1000;         // 1 kHz control loop
 	const int kInitializationPause = 1e6;  // 1ms pause before starting control loop
@@ -186,11 +190,11 @@ protected:
 
 	// Default gains (used only when keys are nonexistent in Redis)
 	double kp_pos_ = 25; // 15;//20 ;
-	double kv_pos_ = 8; // 8;
-	double kp_ori_ = 40;//40;
-	double kv_ori_ = 20; // 8;//20;
+	double kv_pos_ = 15; // 8;
+	double kp_ori_ = 60;//40;
+	double kv_ori_ = 15; // 8;//20;
 	double kp_joint_ = 20;//40/2;
-	double kv_joint_ = 8; // 5;//10/2;
+	double kv_joint_ = 8; 
 };
 
 #endif //DEMO_PROJECT_H

@@ -15,7 +15,6 @@ static inline bool isnan(const Eigen::MatrixBase<Derived>& x) {
 
 using namespace std;
 
-
 /**
  * PP_Project::readRedisValues()
  * ------------------------------
@@ -61,6 +60,7 @@ void PP_Project::writeRedisValues() {
 
 	// Send torques
 	redis_client_.REDIS_SET_EIGEN_MATRIX(JOINT_TORQUES_COMMANDED_KEY, command_torques_);
+	
 	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::pos_err",x_err);            
     redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::x_rot_mat_", x_rot_mat_);
 	redis_client_.REDIS_SET_EIGEN_MATRIX("cs225a::robot::kuka_iiwa::tasks::delta", delta);
@@ -113,9 +113,9 @@ PP_Project::ControllerStatus PP_Project::computeJointSpaceControlTorques() {
 	// Compute torques
 	Eigen::VectorXd ddq = -kp_joint_ * q_err - kv_joint_ * dq_err;
 	command_torques_ = robot->_M * ddq; //+ g_;
+
 	return RUNNING;
 }
-
 
 
 /**
@@ -136,13 +136,54 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
     
     bool velocityControl = true;
 
+    Eigen::VectorXd Grad_U(7);
+    Grad_U.setZero();
+
+    Eigen::VectorXd Torques_c(7);
+    Torques_c.setZero();
+
+    if(1){
+    	// Joint constraint controller design
+    	Eigen::VectorXd j_con_h(7);
+    	j_con_h << 2.967,  2.0944, 2.967, 2.0944 , 2.967 , 2.0944, 3.05;
+
+    	Eigen::VectorXd j_dist_0(7);
+    	for(int i = 0; i < 7 ; ++i)
+    		j_dist_0(i) = 0.8;
+    	//j_dist_0 << 0.5, 0.5, 0.5 , 0.5, 0.5, 0.5, 0.5;
+    	
+    	Eigen::VectorXd j_dist(7);
+
+    	Eigen::VectorXd flags(7);
+    	
+    	flags.setZero();
+
+    	for(int i = 0 ;i < 7; ++i){
+    		if(robot->_q[i] > j_con_h(i) - j_dist_0(i)){
+    			flags(i) = 1;
+    			j_dist(i) = j_con_h(i) - robot->_q(i);
+    		}
+    		else if(robot->_q(i) < -1*j_con_h(i) + j_dist_0(i)){
+    			flags(i) = -1;
+    			j_dist(i) = robot->_q(i) - j_con_h(i);
+    		}else{
+    			flags(i) = 0;
+    			j_dist(i) = j_dist_0(i);
+    		}
+    		Grad_U(i) = -1.0 * (1.0 / j_dist(i) - 1.0 / j_dist_0(i)) / (j_dist(i) *  j_dist(i)) * flags(i);
+        }
+
+        Torques_c = 0.03 * Grad_U;// + robot->_M * (-kv_con * robot->_dq);
+    }
+//0.323998455797 -0.478154123748 0.816329366484; -0.946057259140 -0.163011752550 0.280005055239; -0.000814291144 -0.863015528524 -0.505176735863
     if(velocityControl){
     	dx_des_ = -(kp_pos_ / kv_pos_) * x_err;
 		double v = kMaxVelocity / dx_des_.norm();
 		if (v > 1) v = 1;
 		Eigen::Vector3d dx_err = dx_ - v * dx_des_;
 		Eigen::Vector3d ddx = -kv_pos_ * dx_err;
-    	ee_error << ddx , -1 * kp_ori_ * delta ;
+
+		ee_error << ddx , -1 * kp_ori_ * delta ;
         ee_v_error << 0,0,0, -1 * kv_ori_ * x_w_;
     }
 	else{
@@ -154,8 +195,9 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	Eigen::VectorXd q_err = robot->_q - q_des_;
 	Eigen::VectorXd dq_err = robot->_dq ;
 	Eigen::VectorXd ddq = -kp_joint_ * q_err -kv_joint_ * dq_err;
-	
-	command_torques_ = J0_.transpose() * (L0 * (ee_error  + ee_v_error)) + Nbar.transpose() * robot->_M * ddq;
+
+	command_torques_ = J0_.transpose() * (L0 * (ee_error  + ee_v_error)) + Nbar.transpose() * (robot->_M * ddq) + Torques_c; 
+
 	return RUNNING;
 }
 

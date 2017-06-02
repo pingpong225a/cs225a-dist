@@ -146,14 +146,13 @@
                 <mesh filename="kuka_iiwa_graphics/link6.obj" scale="1 1 1" />
             </geometry>
         </visual>
-        <!-- <collision>
+        <collision>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <geometry>
                 <mesh filename="kuka_iiwa_graphics/link6.obj" scale="1 1 1" />
             </geometry>
-        </collision> -->
-        
-        <!--<visual>
+        </collision> 
+        <visual>
             <origin xyz="0 0 0.05" rpy="0 0 0" />
             <geometry>
                 <box size="0.33 0.33 0.02" />
@@ -167,7 +166,7 @@
             <geometry>
                 <box size="0.33 0.33 0.02" />
             </geometry>
-        </collision>-->
+        </collision>
     
     </link>
     <joint name="j0" type="revolute">
