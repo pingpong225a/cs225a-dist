@@ -133,7 +133,7 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 
 	// Orientation error
 	robot->orientationError(delta, x_rot_mat_des_, x_rot_mat_);		
-    
+
     bool velocityControl = true;
 
     Eigen::VectorXd Grad_U(7);
@@ -178,8 +178,16 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 //0.323998455797 -0.478154123748 0.816329366484; -0.946057259140 -0.163011752550 0.280005055239; -0.000814291144 -0.863015528524 -0.505176735863
     if(velocityControl){
     	dx_des_ = -(kp_pos_ / kv_pos_) * x_err;
-		double v = kMaxVelocity / dx_des_.norm();
-		if (v > 1) v = 1;
+		double v =  kMaxVelocity / dx_des_.norm(); // dx_des_.norm() / kMaxVelocity ; // kMaxVelocity / dx_des_.norm(); 
+		
+
+		if (v > 1) { // PD control when v = 1
+			v = 1;
+		}
+
+		// Velocity saturation when v < 1
+		//cout << "Saturated! dx = " << dx_  << "dx_des_.norm = " << dx_des_.norm() << endl;
+
 		Eigen::Vector3d dx_err = dx_ - v * dx_des_;
 		Eigen::Vector3d ddx = -kv_pos_ * dx_err;
 

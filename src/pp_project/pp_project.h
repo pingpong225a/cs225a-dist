@@ -73,7 +73,7 @@ public:
         x_rot_mat_des_ << 0.292063001039, -0.323931212211, 0.899870975851, -0.953166683688, -0.175878542620, 0.246048798725, 0.078565110144, -0.929588784357, -0.360128054262;
 
 		// Desired end effector position
-        x_des_ << 0.25, -0.52, 0.5;
+        x_des_ << 0.05, -0.62, 0.44;
 		dx_des_.setZero();
 		dphi_.setZero();
 	}
@@ -188,7 +188,7 @@ protected:
 	Eigen::Vector3d delta;
 
 	// Default gains (used only when keys are nonexistent in Redis)
-	double kp_pos_ = 20; // 15;//20 ;
+	double kp_pos_ = 40; // 15;//20 ;
 	double kv_pos_ = 15; // 8;
 	double kp_ori_ = 60;//40;
 	double kv_ori_ = 15; // 8;//20;
