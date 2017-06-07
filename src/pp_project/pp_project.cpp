@@ -205,7 +205,7 @@ PP_Project::ControllerStatus PP_Project::computeOperationalSpaceControlTorques()
 	Eigen::VectorXd ddq = -kp_joint_ * q_err -kv_joint_ * dq_err;
 
 	command_torques_ = J0_.transpose() * (L0 * (ee_error  + ee_v_error)) + Nbar.transpose() * (robot->_M * ddq) + Torques_c; 
-
+    //command_torques_ = (robot->_M * ddq);
 	return RUNNING;
 }
 
